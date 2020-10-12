@@ -43,7 +43,7 @@ esac
 # uncomment for a colored prompt, if the terminal has the capability; turned
 # off by default to not distract the user: the focus in a terminal window
 # should be on the output of commands, not on the prompt
-force_color_prompt=yes
+#force_color_prompt=yes
 
 if [ -n "$force_color_prompt" ]; then
     if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
@@ -55,13 +55,13 @@ if [ -n "$force_color_prompt" ]; then
 	color_prompt=
     fi
 fi
-if [ "$color_prompt" = yes ]; then
-    #PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
-    PS1='\[\033[40m\]\[\033[01;32m\]Welcome ${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u, \@\[\033[01;36m\]\nDIR: [ \[\033[33m\]\w \[\033[01;36m\]]\[\033[00m\]\[\033[01;31m\]\n>>> \[\033[00m\]'
-else
-    PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
-fi
-unset color_prompt force_color_prompt
+
+#if [ "$color_prompt" = yes ]; then
+#    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+#else
+#    PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+#fi
+#unset color_prompt force_color_prompt
 
 # If this is an xterm set the title to user@host:dir
 case "$TERM" in
@@ -116,6 +116,17 @@ if ! shopt -oq posix; then
   fi
 fi
 
+# MY CHANGES
+
+export GOROOT=/usr/local/go
+export GOPATH=$HOME/go
+export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+
+export PS1='\[\033[01;32m\]welcome ${debian_chroot:+($debain_chroot)}\[\033[01;32m\]\u \nDIR: [ \[\033[33m\]\w \[\033[01;36m\]]\[\033[01;31m\]\n>>> \[\033[00m\]'
+
+# Funtions
+o () { xdg-open $1; }
+psg () { ps -eaf | grep -i $1; }
 extract() {
 	if [ -f $1 ]; then 
 		case $1 in 
@@ -132,19 +143,25 @@ extract() {
 		echo -e "\033[01;31m$1 is not Valid File"
 	fi
 }
-		
 
-alias hanghup='sudo pm-hibernate'
+# Aliases
+alias p='cat'
 alias q='exit'
-alias dtop='cd ~/Desktop/'
-alias dloads='cd ~/Downloads/'
-alias docs='cd ~/Documents/'
-alias ctfs='cd ~/Documents/WarGames'
-psg () { ps -eaf | grep -i $1; }
+alias ..='cd ..'
+alias ...='cd ../../'
+alias ....='cd ../../../'
+alias sls='screen -list'
+alias docs='cd ~/Documents'
+alias dloads='cd ~/Downloads'
+alias dtop='cd ~/Desktop'
+alias ls='ls --color'
+alias rm='rm -i'
+alias cp='cp -i'
+alias mv='mv -i'
+alias vi='vim'
+alias ll='ls -lart'
+alias hiu='history -n'		# get latest history cmds from other terminals too
+alias t='tmux'
+alias tls='tmux list-session'
 alias chkport='sudo netstat -nplt'
 alias chkportu='sudo netstat -nplu'
-alias ..='cd ..'
-alias ...='cd  ../../'
-alias ....='cd ../../../'
-o () { xdg-open $1; }
-alias p='cat'
