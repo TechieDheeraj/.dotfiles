@@ -166,3 +166,4 @@ alias tls='tmux list-session'
 alias chkport='sudo netstat -nplt'
 alias chkportu='sudo netstat -nplu'
 alias g++='g++ --std=c++17'
+tat() { tmux att -t $1; }

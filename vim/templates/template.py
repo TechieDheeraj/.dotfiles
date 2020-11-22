@@ -1,11 +1,11 @@
+#! /usr/bin/env python3
+
 ###
  #      file    :
  #      author  :  techiedheeraj
  #      created :
  #      lastMod :
 ###
-
-#! /usr/bin/env python3
 
 import os
 

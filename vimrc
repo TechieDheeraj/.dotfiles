@@ -38,11 +38,11 @@ syntax on
 filetype plugin indent on
 colorscheme default
 
-set softtabstop=4
-set expandtab
+set softtabstop=2
 set hlsearch
-set ts=4
-set sw=4
+set ts=2
+set sw=2
+set expandtab
 set number
 set ruler
 set showcmd
