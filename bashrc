@@ -167,3 +167,4 @@ alias chkport='sudo netstat -nplt'
 alias chkportu='sudo netstat -nplu'
 alias g++='g++ --std=c++17'
 tat() { tmux att -t $1; }
+export EDITOR=vim
