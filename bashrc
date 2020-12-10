@@ -3,6 +3,7 @@
 # for examples
 
 # If not running interactively, don't do anything
+export BASH_SILENCE_DEPRECATION_WARNING=1
 case $- in
     *i*) ;;
       *) return;;
@@ -88,7 +89,7 @@ fi
 #export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
 # some more ls aliases
-alias ll='ls -alF'
+alias ls='ls -G'
 alias la='ls -A'
 alias l='ls -CF'
 
@@ -154,7 +155,6 @@ alias sls='screen -list'
 alias docs='cd ~/Documents'
 alias dloads='cd ~/Downloads'
 alias dtop='cd ~/Desktop'
-alias ls='ls --color'
 alias rm='rm -i'
 alias cp='cp -i'
 alias mv='mv -i'
@@ -165,6 +165,7 @@ alias t='tmux'
 alias tls='tmux list-session'
 alias chkport='sudo netstat -nplt'
 alias chkportu='sudo netstat -nplu'
-alias g++='g++ --std=c++17'
+alias g++='g++ --std=c++17 -include-pch ~/Documents/code/stdc++.h.gch'
+fime() { grep -irn $1 ~/.bashrc; }
 tat() { tmux att -t $1; }
 export EDITOR=vim
