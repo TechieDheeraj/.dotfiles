@@ -22,7 +22,7 @@ Plug 'tmhedberg/SimpylFold', { 'for': 'python' }
 Plug 'lervag/vimtex', { 'for': 'tex' }
 Plug 'vhdirk/vim-cmake'
 Plug 'ds26gte/scmindent'
-Plug 'fatih/vim-go'
+"Plug 'fatih/vim-go'
 
 "Note taking
 Plug 'vimwiki/vimwiki'
@@ -31,21 +31,27 @@ Plug 'lukaszkorecki/workflowish'
 Plug 'tpope/vim-fugitive'
 Plug 'airblade/vim-gitgutter'
 Plug 'editorconfig/editorconfig-vim'
+"Plug 'jiangmiao/auto-pairs'
 
 call plug#end()
 
 syntax on
 filetype plugin indent on
-colorscheme default
+colorscheme desert
+set backspace=indent,eol,start
 
-set softtabstop=2
+set softtabstop=4
 set hlsearch
 set ts=2
 set sw=2
-set expandtab
 set number
+set relativenumber
+set expandtab
 set ruler
 set showcmd
+set smartindent
+set cindent
+set autoindent
 
 " Uncomment the following to have Vim jump to the last position when
 " reopening a file
