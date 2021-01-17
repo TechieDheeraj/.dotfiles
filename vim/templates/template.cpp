@@ -155,8 +155,7 @@ const long double pi = acos((long double) -1.0);
 const long double q = pi / MAX;
 
 inline void solve();
-int main()
-{
+int main() {
 #ifdef LOCAL
   freopen("in.txt" , "r" , stdin);
   //freopen("out.txt" , "w" , stdout);
@@ -173,7 +172,6 @@ int main()
 }
 int n;
 
-inline void solve()
-{
+inline void solve() {
 
 }
