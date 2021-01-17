@@ -8,7 +8,7 @@
 //#define LOCAL 1
 #include						<bits/stdc++.h>
 #ifdef LOCAL
-#include						"pprint.hpp"
+#include						 "/Users/r00tdk/.vim/headers/pprint.hpp"
 #else
 #define trace 					//
 #endif
@@ -44,11 +44,13 @@ typedef double				f80;
 
 using namespace std;
 
+#ifdef PBDS
 #include <ext/pb_ds/assoc_container.hpp>
 #include <ext/pb_ds/tree_policy.hpp>
 using namespace __gnu_pbds;
 
 template <typename T> using oset = tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;
+#endif
 
 template <typename Arg1>
 void prn(Arg1&& arg1)
