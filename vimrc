@@ -32,12 +32,16 @@ Plug 'tpope/vim-fugitive'
 Plug 'airblade/vim-gitgutter'
 Plug 'editorconfig/editorconfig-vim'
 "Plug 'jiangmiao/auto-pairs'
+Plug 'patstockwell/vim-monokai-tasty'
+Plug 'reewr/vim-monokai-phoenix'
+
 
 call plug#end()
 
 syntax on
 filetype plugin indent on
-colorscheme desert
+colorscheme monokai-phoenix 
+"colorscheme desert
 set backspace=indent,eol,start
 
 set softtabstop=4
