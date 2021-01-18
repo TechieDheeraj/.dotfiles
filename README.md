@@ -4,6 +4,7 @@ bashrc -----> cp ./bashrc ~/.bashrc
 tmux.conf --> cp ./tmux.conf ~/.tmux.conf           
 vim --------> cp -rf ./vim ~/.vim          
 vimrc ------> cp ./vimrc ~/.vimrc         
+screenrc ------> cp ./screenrc ~/.screenrc
 
 POST INSTALL:          
 
