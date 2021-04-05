@@ -3,6 +3,7 @@ Prerequisite (Install or Upgrade):
     sudo apt-get upgrade vim 
     sudo apt-get upgrade vim-gtk 
     sudo apt-get upgrade vim-gnome 
+    sudo apt-get upgrade cmake
 
 PRE INSTALL:     
 
