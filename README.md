@@ -1,14 +1,24 @@
-FOR Mac User:
-  sh ./install_on_mac.sh
-For Other OS:
-  sh ./install.sh
+# .dot Files
 
-POST INSTALL:          
+**Techie Dheeraj**
+- [Youtube Channel](https://youtube.com/TechieDheeraj)
 
-Open any file in Vim:
+---
 
--> vim hello.txt               
--> :PlugInstall  # This Vim command will install all plugins mentioned in vimrc      
+## PRE INSTALL
 
-Tips:
-    Use ":%y +" in vim (command mode) to copy whole file to system-clipboard
+**For Mac Users**
+- [ ] sh ./install_on_mac.sh
+
+**For Other OS**
+- [ ] sh ./install.sh
+
+## POST INSTALL
+
+- Open any file in Vim and Enter PlugInstall in command mode:
+
+- vim hello.txt
+- :PlugInstall  # This Vim command will install all plugins mentioned in vimrc
+
+## Tips:
+- Use ":%y +" in vim (command mode) to copy whole file to system-clipboard
