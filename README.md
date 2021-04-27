@@ -1,17 +1,7 @@
-Prerequisite (Install or Upgrade):
-    sudo apt-get update
-    sudo apt-get upgrade vim 
-    sudo apt-get upgrade vim-gtk 
-    sudo apt-get upgrade vim-gnome 
-    sudo apt-get upgrade cmake
-
-PRE INSTALL:     
-
-bashrc -----> cp ./bashrc ~/.bashrc                
-tmux.conf --> cp ./tmux.conf ~/.tmux.conf           
-vim --------> cp -rf ./vim ~/.vim          
-vimrc ------> cp ./vimrc ~/.vimrc         
-screenrc ------> cp ./screenrc ~/.screenrc
+FOR Mac User:
+  sh ./install_on_mac.sh
+For Other OS:
+  sh ./install.sh
 
 POST INSTALL:          
 

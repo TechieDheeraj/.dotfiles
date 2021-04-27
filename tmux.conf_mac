@@ -1,0 +1,172 @@
+#C-b is not acceptable -- Vim uses it
+#set-option -g prefix C-a
+#bind-key C-a last-window
+unbind C-b
+set -g prefix '~'
+bind-key '~' send-prefix
+#bind-key ` last-window   #toggle 
+
+
+set-option -g status-bg colour235 #base02
+set-option -g status-fg colour136 #yellow
+#set-option -g status-attr default
+
+# set window split
+bind-key v split-window -h
+bind-key b split-window
+
+# default window title colors
+#set-window-option -g window-status-fg colour244 #base0
+#set-window-option -g window-status-bg default
+#set-window-option -g window-status-attr dim
+
+# active window title colors
+#set-window-option -g window-status-current-fg green
+#set-window-option -g window-status-current-fg colour166 #orange
+#set-window-option -g window-status-current-fg colour136 #orange
+#set-window-option -g window-status-current-bg white 
+#set-window-option -g window-status-current-bg black
+#set-window-option -g window-status-current-attr bright
+
+# pane border
+#set-option -g pane-border-fg colour235 #base02
+#set-option -g pane-active-border-fg colour240 #base01
+
+# message text
+#set-option -g message-bg colour235 #base02
+#set-option -g message-fg colour166 #orange
+#
+# pane number display
+#set-option -g display-panes-active-colour colour33 #blue
+#set-option -g display-panes-colour colour166 #orange
+# clock
+#set-window-option -g clock-mode-colour green #green
+
+# center align window list
+set -g status-interval 1
+set -g status-justify centre 
+
+# set terminal colors
+set -g default-terminal xterm-256color
+
+#tmux status bar config
+#set -g status-right '#(date -u)'
+set -g status-right "#[fg=blue]#S #I:#P #[fg=yellow]:: %d %b %Y #[fg=green]:: %l:%M %p :: #(date -u | awk '{print $4}')::"
+#set -g status-left-length 0
+#set -g status-right-length 0
+#set -g status-left '#[fg=green]#H #[fg=black]. #[fg=green,bright]#(uname -r | cut -c 1-6)#[default]'
+#set -g status-right '#[fg=green,bg=default,bright]#(tmux-mem-cpu-load 1) #[fg=red,dim,bg=default]#(uptime | cut -f 4-5 -d " " | cut -f 1 -d ",") #[fg=white,bg=default]%a%l:%M:%S %p#[default] #[fg=blue]%Y-%m-%d'
+
+# Start numbering at 1
+set -g base-index 1
+
+# Allows for faster key repetition
+set -s escape-time 0
+
+# pane resizing
+# Rather than constraining window size to the maximum size of any client 
+# connected to the *session*, constrain window size to the maximum size of any 
+# client connected to *that window*. Much more reasonable.
+setw -g aggressive-resize on
+
+bind -r C-h resize-pane -L 5
+bind -r C-j resize-pane -D 5
+bind -r C-k resize-pane -U 5
+bind -r C-l resize-pane -R 5
+
+# Allows us to use C-a a <command> to send commands to a TMUX session inside 
+# another TMUX session
+bind-key a send-prefix
+
+# Activity monitoring
+setw -g monitor-activity on
+set -g visual-activity on
+
+#scrollback buffer size ie history size
+set-option -g history-limit 30000
+#clear buffer history <Ctrl+k>
+bind -n C-k clear-history
+
+# Vi copypaste mode
+set-window-option -g mode-keys vi
+#bind-key -t vi-copy 'v' begin-selection
+#bind-key -t vi-copy 'y' copy-selection
+# If the below two command fails use two above -- Use bindkey + '[' to enter copy mode then use 'v' and 'y'(or bindkey + ']') to copy and paste 
+bind-key -Tcopy-mode-vi 'v' send -X begin-selection
+bind-key -Tcopy-mode-vi 'y' send -X copy-selection
+
+# hjkl pane traversal and also down,up arrow keys  for pane traversal
+bind h select-pane -L
+bind j select-pane -D
+bind k select-pane -U
+bind l select-pane -R
+
+#select pane in a window
+bind-key o command-prompt -p "Select pane no:"  "select-pane -t '%%'"
+
+#create new window with name
+bind-key C command-prompt -p "Name of new window: " "new-window -n '%%'"
+
+# pane movement between windows
+bind-key g command-prompt -p "Join/Get pane from:"  "join-pane -s '%%'"
+bind-key m command-prompt -p "Move pane to:"  "join-pane -t '%%'"
+
+# reload config
+bind r source-file ~/.tmux.conf \; display-message "Config reloaded..."
+
+# auto window rename
+set-window-option -g automatic-rename
+
+# rm mouse mode fail
+#set -g mode-mouse off
+#setw -g mode-mouse on
+#set mouse-resize-pane on
+
+# color
+#set -g default-terminal "screen-256color"
+
+# status bar
+#set-option -g status-utf8 on
+
+#setw -g utf8 on
+#set -g status-utf8 on
+
+# Updates for tmux 1.9's current pane splitting paths.
+if-shell "[[ `tmux -V` == *1.9* ]]" 'unbind c; bind c new-window -c "#{pane_current_path}"'
+if-shell "[[ `tmux -V` == *1.9* ]]" 'unbind s; bind s split-window -v -c "#{pane_current_path}"'
+if-shell "[[ `tmux -V` == *1.9* ]]" "unbind '\"'; bind '\"' split-window -v -c '#{pane_current_path}'"
+if-shell "[[ `tmux -V` == *1.9* ]]" 'unbind v; bind v split-window -h -c "#{pane_current_path}"'
+if-shell "[[ `tmux -V` == *1.9* ]]" 'unbind %; bind % split-window -h -c "#{pane_current_path}"'
+
+# ******* OLD FILE ********* 
+
+#unbind C-b
+#set -g prefix `
+#bind-key ` last-window
+#bind-key e send-prefix
+
+#set -g status-position bottom
+#set -g status-bg colour234
+#set -g status-fg colour137
+#set -g status-attr dim
+#set -g status-left ''
+#set -g status-right '#[fg=colour233,bg=colour241,bold] %d/%m #[fg=colour233,bg=colour245,bold] %H:%M:%S '
+#set -g status-right-length 50
+#set -g status-left-length 20
+#set	-g default-shell "/bin/bash"
+#set -g default-command ""
+#set -g default-terminal "screen-256color"
+#
+#setw -g window-status-current-fg colour81
+#setw -g window-status-current-bg colour238
+#setw -g window-status-current-attr bold
+#setw -g window-status-current-format ' #I#[fg=colour250]:#[fg=colour255]#W#[fg=colour50]#F '
+#
+#setw -g window-status-fg colour138
+#setw -g window-status-bg colour235
+#setw -g window-status-attr none
+#setw -g window-status-format ' #I#[fg=colour237]:#[fg=colour250]#W#[fg=colour244]#F '
+#
+#setw -g window-status-bell-attr bold
+#setw -g window-status-bell-fg colour255
+#setw -g window-status-bell-bg colour1
