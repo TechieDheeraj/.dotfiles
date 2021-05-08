@@ -2,6 +2,7 @@
 
 echo -e "Installing CMake \n"
 brew install cmake
+brew install tmux
 echo -e "Copying all dotfiles \n"
 cp -f ./bashrc_mac ~/.bashrc
 ln -sf ~/.bashrc ~/.bash_profile
