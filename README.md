@@ -9,6 +9,7 @@
 
 **For Mac Users**
 - [ ] bash ./install_on_mac.sh
+- [ ] Upload ./files/rectangle.json into Rectangle application
 
 **For Other OS**
 - [ ] bash ./install.sh
