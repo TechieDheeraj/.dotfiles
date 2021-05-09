@@ -13,8 +13,8 @@ cp -f ./vimrc ~/.vimrc
 cp -f ./screenrc ~/.screenrc
 cp -f ./tmux.conf ~/.tmux.conf 
 cp -rf ./vim ~/.vim
+cd ~/.vim/headers/bits; /usr/bin/g++ -w stdc++.h; cd -; 
 
 echo -e "All Dotfiles Copied \n"
-
-echo -e "< Open Any file in Vim and Enter :PlugInstall in Command mode >\n"
+vim -c PlugInstall hello -c qa!
 echo -e "Just Close the terminal and Open Again \n"

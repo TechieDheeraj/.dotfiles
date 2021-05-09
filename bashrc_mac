@@ -173,3 +173,5 @@ alias g++='g++ --std=c++17'
 fime() { grep -irn $1 ~/.bashrc; }
 tat() { tmux att -t $1; }
 export EDITOR=vim
+tou() { touch "$1".mp4; }
+ec() { tou $(echo $@ | tr " " "_";); }

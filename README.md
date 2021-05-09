@@ -8,10 +8,10 @@
 ## PRE INSTALL
 
 **For Mac Users**
-- [ ] sh ./install_on_mac.sh
+- [ ] bash ./install_on_mac.sh
 
 **For Other OS**
-- [ ] sh ./install.sh
+- [ ] bash ./install.sh
 
 ## POST INSTALL
 
