@@ -167,7 +167,8 @@ alias t='tmux'
 alias tls='tmux list-session'
 alias chkport='sudo netstat -nplt'
 alias chkportu='sudo netstat -nplu'
-alias g++='g++ --std=c++17 -include-pch ~/.vim/headers/stdc++.h.gch'
+#alias g++='g++ --std=c++17 -include-pch ~/.vim/headers/stdc++.h.gch'
+alias g++='g++ --std=c++17 -I~/.vim/headers -include-pch ~/.vim/headers/bits/stdc++.h.gch'
 fime() { grep -irn $1 ~/.bashrc; }
 tat() { tmux att -t $1; }
 export EDITOR=vim
