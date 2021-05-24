@@ -13,7 +13,7 @@ cp -f ./vimrc ~/.vimrc
 cp -f ./screenrc ~/.screenrc
 cp -f ./tmux.conf ~/.tmux.conf 
 cp -rf ./vim ~/.vim
-cd ~/.vim/headers/bits; /usr/bin/g++ -w stdc++.h; cd -; 
+cd ~/.vim/headers/bits; /usr/bin/g++ --std=c++17 -w stdc++.h; cd -; 
 
 echo -e "All Dotfiles Copied \n"
 vim -c PlugInstall hello -c qa!
