@@ -18,7 +18,7 @@ Plug 'airblade/vim-gitgutter'
 Plug 'editorconfig/editorconfig-vim'
 
 "Language specific
-Plug 'tmhedberg/SimpylFold', { 'for': 'python' }
+"Plug 'tmhedberg/SimpylFold', { 'for': 'python' }
 Plug 'lervag/vimtex', { 'for': 'tex' }
 Plug 'vhdirk/vim-cmake'
 Plug 'ds26gte/scmindent'
