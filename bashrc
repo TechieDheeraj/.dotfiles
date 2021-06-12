@@ -146,6 +146,49 @@ extract() {
 	fi
 }
 
+# git
+alias gs="git status"
+alias gps="git push origin"
+alias gc="git commit -m"
+alias ga="git add"
+alias gl="git log"
+alias gd="git diff"
+alias gdab="git for-each-ref --format '%(refname:short)' refs/heads | xargs git branch -D"
+alias gca="git commit --amend -m"
+alias gch="git checkout"
+alias gchn="git checkout -b"
+alias gf="git fetch -p"
+alias gpo="git pull origin"
+alias gst="git stash"
+alias gsp="git stash pop"
+alias gsc="git stash clear"
+alias gsl="git stash list"
+alias grs="git reset --soft"
+alias grh="git reset --hard"
+alias gspp="gst;gpl;gsp"
+function gg() {
+	ga .
+	gc "$1"
+	gps
+}
+
+:<<comm
+# web dev
+# delete mongodb database
+alias ddb="mongo --quiet --eval 'db.getMongo().getDBNames().forEach(function(i){db.getSiblingDB(i).dropDatabase()})'"
+# load environment variables and start localhost
+alias nodemon="source app-env;nodemon"
+# share localhost for testing
+alias host="ssh -R 80:localhost:1729 ssh.localhost.run"
+comm
+
+alias py="python2"
+alias py3="python3"
+
+alias r="tput reset"
+alias eb="subl ~/.bashrc"
+alias s="subl "
+
 # Aliases
 alias p='cat'
 alias q='exit'
@@ -167,8 +210,8 @@ alias t='tmux'
 alias tls='tmux list-session'
 alias chkport='sudo netstat -nplt'
 alias chkportu='sudo netstat -nplu'
-#alias g++='g++ --std=c++17 -include-pch ~/.vim/headers/stdc++.h.gch'
-alias g++='g++ --std=c++17 -I~/.vim/headers -include-pch ~/.vim/headers/bits/stdc++.h.gch'
+g++(){ /usr/bin/g++ --std=c++17 -I$VIMPATH/headers -include-pch $VIMPATH/headers/bits/stdc++.h.gch -Wall -Wno-misleading-indentation -fsanitize=address -fsanitize=undefined $@ -o a.out && ./a.out;}
+#alias g++='g++ --std=c++17 -I~/.vim/headers -include-pch ~/.vim/headers/bits/stdc++.h.gch'
 fime() { grep -irn $1 ~/.bashrc; }
 tat() { tmux att -t $1; }
 export EDITOR=vim
