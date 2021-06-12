@@ -12,7 +12,8 @@ cp -f ./bashrc ~/.bashrc
 cp -f ./vimrc ~/.vimrc
 cp -f ./screenrc ~/.screenrc
 cp -f ./tmux.conf ~/.tmux.conf 
-cp -rf ./vim ~/.vim
+mkdir -p ~/.vim 2>&1 > /dev/null
+cp -rf ./vim/ ~/.vim
 cd ~/.vim/headers/bits; /usr/bin/g++ --std=c++17 -w stdc++.h; cd -; 
 
 echo -e "All Dotfiles Copied \n"
