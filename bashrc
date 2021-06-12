@@ -210,8 +210,9 @@ alias t='tmux'
 alias tls='tmux list-session'
 alias chkport='sudo netstat -nplt'
 alias chkportu='sudo netstat -nplu'
-g++(){ /usr/bin/g++ --std=c++17 -I$VIMPATH/headers -include-pch $VIMPATH/headers/bits/stdc++.h.gch -Wall -Wno-misleading-indentation -fsanitize=address -fsanitize=undefined $@ -o a.out && ./a.out;}
 #alias g++='g++ --std=c++17 -I~/.vim/headers -include-pch ~/.vim/headers/bits/stdc++.h.gch'
+#g++(){ /usr/bin/g++ --std=c++17 -I$VIMPATH/headers -include-pch $VIMPATH/headers/bits/stdc++.h.gch -Wall -Wno-misleading-indentation -fsanitize=address -fsanitize=undefined $@ -o a.out && ./a.out;}
+g++(){ /usr/bin/g++ --std=c++17 -I$VIMPATH/headers -include-pch $VIMPATH/headers/bits/stdc++.h.gch -Wno-misleading-indentation -Wno-unknown-pragmas -fsanitize=undefined $@ -o a.out && ./a.out;}
 fime() { grep -irn $1 ~/.bashrc; }
 tat() { tmux att -t $1; }
 export EDITOR=vim
