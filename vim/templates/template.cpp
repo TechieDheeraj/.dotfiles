@@ -5,6 +5,10 @@
  *      lastMod : 
  **/
 
+#pragma GCC optimize("Ofast")
+#pragma GCC optimize("unroll-loops")
+#pragma GCC optimize("inline")
+
 //#define LOCAL 1
 #include						<bits/stdc++.h>
 #ifdef LOCAL
@@ -164,13 +168,12 @@ int main() {
   cin.tie(NULL);
 #endif
   int t = 1;
-  read(t);
+//  read(t);
   fr1 (tc, t) {
     solve();
   }
   return 0;
 }
-int n;
 
 inline void solve() {
 
