@@ -56,6 +56,7 @@ set showcmd
 set smartindent
 set cindent
 set autoindent
+set mouse=a
 
 " Uncomment the following to have Vim jump to the last position when
 " reopening a file
