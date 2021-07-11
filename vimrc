@@ -77,8 +77,12 @@ autocmd BufNewFile *.py 0r ~/.vim/templates/template.py
 " Go Template
 autocmd BufNewFile *.go 0r ~/.vim/templates/template.go
 
+" Java Template
+autocmd BufNewFile *.java 0r ~/.vim/templates/template.java
+
 " Common Changes
-autocmd BufNewFile *.cpp,*.py,*.c,*.go exe "1," . 10 . "g/file\ \ \ \ :/s//file    :  " .expand("%")
-autocmd bufnewfile *.cpp,*.py,*.c,*.go exe "1," . 10 . "g/created\ :/s//created :  " .strftime("%Y %b %d %X")
-autocmd bufnewfile *.cpp,*.py,*.c,*.go exe "1," . 10 . "g/lastMod\ :/s//lastMod :  " .strftime("%c")
-autocmd Bufwritepre,filewritepre *.cpp,*.py,*.c,*.go execute "normal ma"
+autocmd BufNewFile *.cpp,*.py,*.c,*.go,*.java exe "1," . 10 . "g/file\ \ \ \ :/s//file    :  " .expand("%")
+autocmd bufnewfile *.cpp,*.py,*.c,*.go,*.java exe "1," . 10 . "g/created\ :/s//created :  " .strftime("%Y %b %d %X")
+autocmd bufnewfile *.cpp,*.py,*.c,*.go,*.java exe "1," . 10 . "g/lastMod\ :/s//lastMod :  " .strftime("%c")
+autocmd bufnewfile *.java exe "1," . 10 . "g/class\ /s//class " .expand("%:r")
+autocmd Bufwritepre,filewritepre *.cpp,*.py,*.c,*.go,*.java execute "normal ma"
