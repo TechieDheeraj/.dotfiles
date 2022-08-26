@@ -149,6 +149,7 @@ extract() {
 
 # git
 alias gs="git status"
+alias gr="git remote -v"
 alias gps="git push origin"
 alias gc="git commit -m"
 alias ga="git add"

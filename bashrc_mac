@@ -120,12 +120,18 @@ fi
 
 # MY CHANGES
 
-export GOROOT=/usr/local/go
-export GOPATH=$HOME/go
-export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+#export GOROOT=/usr/local/go
+#export GOPATH=$HOME/go
+#export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 export VIMPATH=$HOME/.vim/
 
-export PS1='\[\033[01;32m\]welcome ${debian_chroot:+($debain_chroot)}\[\033[01;32m\]\u \nDIR: [ \[\033[33m\]\w \[\033[01;36m\]]\[\033[01;31m\]\n>>> \[\033[00m\]'
+parse_git_branch() {
+  git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/'
+}
+# Original
+#export PS1='\[\033[01;32m\]welcome ${debian_chroot:+($debain_chroot)}\[\033[01;32m\]\u \nDIR: [ \[\033[33m\]\w \[\033[01;36m\]]\[\033[01;31m\]\n>>> \[\033[00m\]'
+
+export PS1="\[\033[33m\][ \w ] \[\033[01;36m\]\$(parse_git_branch)\[\033[01;31m\]\n>>> \[\033[00m\]"
 
 export PATH=/opt/homebrew/bin:$PATH
 # Funtions
@@ -150,6 +156,7 @@ extract() {
 
 # git
 alias gs="git status"
+alias gr="git remote -v"
 alias gps="git push origin"
 alias gc="git commit -m"
 alias ga="git add"
@@ -223,3 +230,27 @@ ec() { tou $(echo $@ | tr " " "_";); }
 jpa() { . ~/Documents/jupyter/bin/activate; }
 jps() { jpa && jupyter-notebook --no-browser ; }
 jpst() { jpa && jupyter-notebook stop; }
+export GOPATH=$HOME/go
+export GOROOT=/usr/local/opt/go/libexec
+export PATH=$PATH:$GOPATH/bin
+export PATH=$PATH:$GOROOT/bin
+export AWS_REGION="us-west-2"
+alias goc='GOOS=linux go build'
+awsfup() { aws lambda update-function-code --function-name $1 --zip-file $2; }
+awsfst() { aws lambda get-function --function-name $1 --query 'Configuration.[State, LastUpdateStatus]';}
+gocov() { go "test" -cover; }
+gotest() { go "test" run -v $1;}
+#gaws() { echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID};AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY};AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}" | pbcopy; } # copy envs with colon sperated string into clipboard
+#zdocr() { docker run --rm -p 2341:2341/tcp -p 15372:15372/tcp -p 8880:8880/tcp -v :/mnt/certs --name <DOCKER_CONTAINER_NAME> <DOCKER_IMAGE_NAME>; }
+export GPG_TTY=$(tty)
+#assume() { OUT=$(aws sts assume-role --role-arn "$@" --role-session-name AWSCLI-Session);  export AWS_ACCESS_KEY_ID=$(echo $OUT | jq -r '.Credentials''.AccessKeyId'); export AWS_SECRET_ACCESS_KEY=$(echo $OUT | jq -r '.Credentials''.SecretAccessKey'); export AWS_SESSION_TOKEN=$(echo $OUT | jq -r '.Credentials''.SessionToken');} # assume role by providing ARN
+#function kpods() { eval "$1=$(kubectl get pods -n <NAMESPACE> | grep -i <POD_NAME> | cut -d' ' -f1)";}
+#function klpods() { kubectl get pods -n <NAMESPACE> | grep -i <POD_NAME> | cut -d' ' -f1;}
+#function kzl() { local podName; kpods podName; kubectl exec -it $podName -n <NAMESPACE> /bin/bash; }
+#function klogs() { local podName; kpods podName; kubectl logs $podName -n <NAMESPACE>; }
+function goamd() { GOOS=linux GOARCH=amd64 go build ; } # build for amd processor
+#function kcp() { local podName; kpods podName; kubectl cp $1 <NAMESPACE>/$podName:/tmp/; }
+
+export CLICOLOR=1
+#function gtf { aws s3 cp <S3_ARN> .; }
+#function sdocr { docker run -it --rm=true -u root -v ${PWD}:/tmp/project -w /tmp/project -v ~/.m2:/root/.m2 --entrypoint /bin/bash <IMAGE_NAME:TAG_NAME>; }

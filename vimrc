@@ -86,3 +86,4 @@ autocmd bufnewfile *.cpp,*.py,*.c,*.go,*.java exe "1," . 10 . "g/created\ :/s//c
 autocmd bufnewfile *.cpp,*.py,*.c,*.go,*.java exe "1," . 10 . "g/lastMod\ :/s//lastMod :  " .strftime("%c")
 autocmd bufnewfile *.java exe "1," . 10 . "g/class\ /s//class " .expand("%:r")
 autocmd Bufwritepre,filewritepre *.cpp,*.py,*.c,*.go,*.java execute "normal ma"
+ca jf %!jq '.'
