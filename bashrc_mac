@@ -254,3 +254,5 @@ function goamd() { GOOS=linux GOARCH=amd64 go build ; } # build for amd processo
 export CLICOLOR=1
 #function gtf { aws s3 cp <S3_ARN> .; }
 #function sdocr { docker run -it --rm=true -u root -v ${PWD}:/tmp/project -w /tmp/project -v ~/.m2:/root/.m2 --entrypoint /bin/bash <IMAGE_NAME:TAG_NAME>; }
+alias dsleep='sudo pmset -a disablesleep 1'
+alias esleep='sudo pmset -a disablesleep 0'
