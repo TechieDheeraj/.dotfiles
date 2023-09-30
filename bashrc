@@ -218,3 +218,4 @@ alias g++='g++ --std=c++17 -I$VIMPATH/headers -include-pch $VIMPATH/headers/bits
 fime() { grep -irn $1 ~/.bashrc; }
 tat() { tmux att -t $1; }
 export EDITOR=vim
+export TERM='screen-256color'

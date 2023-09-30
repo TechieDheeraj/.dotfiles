@@ -230,10 +230,10 @@ ec() { tou $(echo $@ | tr " " "_";); }
 jpa() { . ~/Documents/jupyter/bin/activate; }
 jps() { jpa && jupyter-notebook --no-browser ; }
 jpst() { jpa && jupyter-notebook stop; }
-export GOPATH=$HOME/go
-export GOROOT=/usr/local/opt/go/libexec
-export PATH=$PATH:$GOPATH/bin
-export PATH=$PATH:$GOROOT/bin
+#export GOPATH=$HOME/go
+#export GOROOT=/usr/local/libexec
+#export PATH=$PATH:$GOPATH/bin
+#export PATH=$PATH:$GOROOT/bin
 export AWS_REGION="us-west-2"
 alias goc='GOOS=linux go build'
 awsfup() { aws lambda update-function-code --function-name $1 --zip-file $2; }
@@ -256,3 +256,20 @@ export CLICOLOR=1
 #function sdocr { docker run -it --rm=true -u root -v ${PWD}:/tmp/project -w /tmp/project -v ~/.m2:/root/.m2 --entrypoint /bin/bash <IMAGE_NAME:TAG_NAME>; }
 alias dsleep='sudo pmset -a disablesleep 1'
 alias esleep='sudo pmset -a disablesleep 0'
+alias venv='source /Users/r00tdk/Documents/code/venv/bin/activate'
+alias sshdel='ssh-add -D'
+sshadd() {
+  if [ "$1" == "p" ]; then
+    ssh-add ~/.ssh/id_rsa_personal
+  else
+    ssh-add ~/.ssh/id_rsa
+  fi
+ }
+ alias devm='ssh dkakkar@10.79.244.38'
+ alias uat='ssh dkakkar@10.79.244.42'
+ alias llvm1='ssh dkakkar@10.79.244.70'
+HOMEBREW_NO_INSTALL_CLEANUP=TRUE
+. "$HOME/.cargo/env"
+export PATH='/Users/r00tdk/Documents/burpSuiteMac/jdk-15.0.2.jdk/Contents/Home/bin':$PATH
+alias burp='/Users/r00tdk/Documents/burpSuiteMac/jdk-15.0.2.jdk/Contents/Home/bin/java -javaagent:/Users/r00tdk/Downloads/Burp\ Pro\ 2020.12\ +\ Loader/BurpSuiteLoader_v2020.12.jar -noverify -jar /Users/r00tdk/Downloads/Burp\ Pro\ 2020.12\ +\ Loader/burpsuite_pro_v2020.12.jar &'
+export TERM='screen-256color'
