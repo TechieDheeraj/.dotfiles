@@ -131,8 +131,9 @@ parse_git_branch() {
 # Original
 #export PS1='\[\033[01;32m\]welcome ${debian_chroot:+($debain_chroot)}\[\033[01;32m\]\u \nDIR: [ \[\033[33m\]\w \[\033[01;36m\]]\[\033[01;31m\]\n>>> \[\033[00m\]'
 
-export PS1="\[\033[33m\][ \w ] \[\033[01;36m\]\$(parse_git_branch)\[\033[01;31m\]\n>>> \[\033[00m\]"
-
+source /usr/local/opt/kube-ps1/share/kube-ps1.sh
+export PS1="\[\033[33m\][ \w ] \$(kube_ps1)\$ \[\033[01;36m\]\$(parse_git_branch)\[\033[01;31m\]\n>>> \[\033[00m\]"
+#export PS1="\[\033[33m\][ \w ] \[\033[01;36m\]\$(parse_git_branch)\[\033[01;31m\]\n>>> \[\033[00m\]"
 export PATH=/opt/homebrew/bin:$PATH
 # Funtions
 o () { xdg-open $1; }
@@ -256,7 +257,8 @@ export CLICOLOR=1
 #function sdocr { docker run -it --rm=true -u root -v ${PWD}:/tmp/project -w /tmp/project -v ~/.m2:/root/.m2 --entrypoint /bin/bash <IMAGE_NAME:TAG_NAME>; }
 alias dsleep='sudo pmset -a disablesleep 1'
 alias esleep='sudo pmset -a disablesleep 0'
-alias venv='source /Users/r00tdk/Documents/code/venv/bin/activate'
+#alias venv='source /Users/r00tdk/Documents/code/venv/bin/activate'
+alias venv='source /Users/dheeraj/Documents/code/Jenkins-Configuration-as-code/venv/bin/activate'
 alias sshdel='ssh-add -D'
 sshadd() {
   if [ "$1" == "p" ]; then
@@ -269,7 +271,42 @@ sshadd() {
  alias uat='ssh dkakkar@10.79.244.42'
  alias llvm1='ssh dkakkar@10.79.244.70'
 HOMEBREW_NO_INSTALL_CLEANUP=TRUE
-. "$HOME/.cargo/env"
+#. "$HOME/.cargo/env"
 export PATH='/Users/r00tdk/Documents/burpSuiteMac/jdk-15.0.2.jdk/Contents/Home/bin':$PATH
 alias burp='/Users/r00tdk/Documents/burpSuiteMac/jdk-15.0.2.jdk/Contents/Home/bin/java -javaagent:/Users/r00tdk/Downloads/Burp\ Pro\ 2020.12\ +\ Loader/BurpSuiteLoader_v2020.12.jar -noverify -jar /Users/r00tdk/Downloads/Burp\ Pro\ 2020.12\ +\ Loader/burpsuite_pro_v2020.12.jar &'
 export TERM='screen-256color'
+alias apt-get='apt-fast'
+alias awsume=". awsume"
+ecrlogin() {
+  awsume cp-ecr
+#  aws ecr get-login-password | docker login --username AWS --password-stdin 737819302384.dkr.ecr.us-west-2.amazonaws.com
+	aws --profile cp-ecr ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 737819302384.dkr.ecr.us-west-2.amazonaws.com
+}
+alias rot13="tr 'A-Za-z0-9' 'N-ZA-Mn-za-m5-90-4'"
+alias unrot13="tr 'N-ZA-Mn-za-m5-90-4' 'A-Za-z0-9'"
+#gittok="AUD8pmqSZHu1DzEJAxSxLzEAFmpX"
+#gittok="OWcyZjJSNlVtT3FJMU5xb3FaWDIK"
+#alias cpto=$(echo $gittok | unrot13 | base64 -d | xsel -ib)
+cpto() { echo $1 | base64 -d | unrot13 | pbcopy; }
+export PATH=/Users/dheeraj/Downloads/node-v18.18.2-darwin-x64/bin:$PATH
+export KUBECONFIG=$HOME/.kube/config
+export ARTIFACTORY_API_KEY=AKCp8pQGnsPjB6WXZAndwhQZ2cJb4L8RA6fSX7hU4KjFDJEPgqT7ipD647DjC4QrfR6C1kfeY
+export ARTIFACTORY_USER=vaibhav.sood
+
+[[ -e "/Users/dheeraj/lib/oci_autocomplete.sh" ]] && source "/Users/dheeraj/lib/oci_autocomplete.sh"
+
+#AWSume alias to source the AWSume script
+
+#Auto-Complete function for AWSume
+_awsume() {
+    local cur prev opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    opts=$(awsume-autocomplete)
+    COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+    return 0
+}
+complete -F _awsume awsume
+alias tiny='ssh 192.168.29.56'
+tinycp() { scp -r $@ dheeraj@192.168.29.56:~/Downloads/; }

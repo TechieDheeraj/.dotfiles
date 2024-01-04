@@ -1,8 +1,8 @@
 # Run this script to install all dotfiles on MacOS
 
 echo -e "Installing tools \n"
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-brew install cmake
+#/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+#brew install cmake
 brew install tmux
 brew install rectangle
 
