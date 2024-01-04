@@ -1,0 +1,52 @@
+{
+    "workbench.colorTheme": "GitHub Light",
+    "terminal.integrated.fontSize": 14,
+    "editor.fontLigatures": false,
+    "editor.minimap.enabled": false,
+    "explorer.confirmDragAndDrop": false,
+    "editor.fontSize": 14,
+    "workbench.editor.enablePreviewFromQuickOpen": true,
+    "workbench.editor.enablePreview": false,
+    "workbench.iconTheme": "Monokai Pro Icons",
+    "window.zoomLevel": 1,
+    "yaml.schemas": {
+        "file:///Users/dheeraj/.vscode/extensions/docsmsft.docs-yaml-1.0.1/dist/toc.schema.json": "/toc\\.yml/i"
+    },
+    "terminal.external.osxExec": "iTerm.app",
+    "terminal.explorerKind": "external",
+    "terminal.integrated.profiles.osx": {
+
+        "bash": {
+            "path": "bash",
+            "args": [
+                "-l"
+            ],
+            "icon": "terminal-bash"
+        },
+        "zsh": {
+            "path": "zsh",
+            "args": [
+                "-l"
+            ]
+        },
+        "fish": {
+            "path": "fish",
+            "args": [
+                "-l"
+            ]
+        },
+        "tmux": {
+            "path": "tmux",
+            "icon": "terminal-tmux"
+        },
+        "pwsh": {
+            "path": "pwsh",
+            "icon": "terminal-powershell"
+        }
+    },
+    "files.saveConflictResolution": "overwriteFileOnDisk",
+    "workbench.colorCustomizations": {
+        
+
+    }
+}
