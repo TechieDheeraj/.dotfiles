@@ -2,9 +2,10 @@
 
 echo -e "Installing tools \n"
 #/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-#brew install cmake
+brew install cmake
 brew install tmux
 brew install rectangle
+brew install --cask scroll-reverser
 
 echo -e "Copying all dotfiles \n"
 cp -f ./bashrc_mac ~/.bashrc

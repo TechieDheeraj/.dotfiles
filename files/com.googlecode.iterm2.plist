@@ -7,7 +7,28 @@
 	<key>AboutToPasteTabsWithCancel_selection</key>
 	<integer>2</integer>
 	<key>Actions</key>
-	<array/>
+	<array>
+		<dict>
+			<key>action</key>
+			<integer>10</integer>
+			<key>parameter</key>
+			<string>b</string>
+			<key>title</key>
+			<string>back</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>action</key>
+			<integer>10</integer>
+			<key>parameter</key>
+			<string>f</string>
+			<key>title</key>
+			<string>forward</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+	</array>
 	<key>Custom Color Presets</key>
 	<dict>
 		<key>HaX0R_GR33N</key>
@@ -2854,6 +2875,8 @@
 	<false/>
 	<key>disableMetalWhenUnplugged</key>
 	<false/>
+	<key>findMode_iTerm</key>
+	<integer>0</integer>
 	<key>kCPFavoritesUserDefaultsKey</key>
 	<array>
 		<data>

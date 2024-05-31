@@ -44,7 +44,7 @@ esac
 # uncomment for a colored prompt, if the terminal has the capability; turned
 # off by default to not distract the user: the focus in a terminal window
 # should be on the output of commands, not on the prompt
-#force_color_prompt=yes
+force_color_prompt=yes
 
 if [ -n "$force_color_prompt" ]; then
     if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
@@ -277,11 +277,6 @@ alias burp='/Users/r00tdk/Documents/burpSuiteMac/jdk-15.0.2.jdk/Contents/Home/bi
 export TERM='screen-256color'
 alias apt-get='apt-fast'
 alias awsume=". awsume"
-ecrlogin() {
-  awsume cp-ecr
-#  aws ecr get-login-password | docker login --username AWS --password-stdin 737819302384.dkr.ecr.us-west-2.amazonaws.com
-	aws --profile cp-ecr ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 737819302384.dkr.ecr.us-west-2.amazonaws.com
-}
 alias rot13="tr 'A-Za-z0-9' 'N-ZA-Mn-za-m5-90-4'"
 alias unrot13="tr 'N-ZA-Mn-za-m5-90-4' 'A-Za-z0-9'"
 #gittok="AUD8pmqSZHu1DzEJAxSxLzEAFmpX"
@@ -308,5 +303,94 @@ _awsume() {
     return 0
 }
 complete -F _awsume awsume
-alias tiny='ssh 192.168.29.56'
-tinycp() { scp -r $@ dheeraj@192.168.29.56:~/Downloads/; }
+
+ecrlogin() {
+  awsume cp-ecr
+	export $(awsudo cp-ecr)
+#  aws ecr get-login-password | docker login --username AWS --password-stdin 737819302384.dkr.ecr.us-west-2.amazonaws.com
+  aws --profile cp-ecr ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 737819302384.dkr.ecr.us-west-2.amazonaws.com
+  export CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain cradlepoint --domain-owner 737819302384 --query authorizationToken --output text`
+  export PIP_INDEX_URL=https://aws:$CODEARTIFACT_AUTH_TOKEN@cradlepoint-737819302384.d.codeartifact.us-west-2.amazonaws.com/pypi/cp-pypi-cache/simple/
+}
+tinyip="192.168.0.246"
+alias tiny='ssh -X $tinyip'
+tinycp() { scp -r $@ dheeraj@$tinyip:~/Downloads/; }
+bigip="192.168.0.15"
+alias big='sshpass -p dkkr ssh -X $bigip'
+bipcp() { scp -r $@ dheeraj@$bigip:~/Downloads/; }
+alias kgp='kubectl get pods'
+kgc() { kubectl get pods $1 -o jsonpath='{.spec.containers[*].name}'; }
+export PATH="/opt/homebrew/opt/node@20/bin:$PATH"
+katt() { echo "kubectl attach -it deploy/ncx-as-pod -c ncos -n $1" | pbcopy; } 
+
+# suspend_and_shutdown.sh
+#qm list | grep running | awk -F'[^0-9]*' '$0=$2' | while read -r vm_id; do qm suspend $vm_id --todisk 1; done; shutdown -h now
+
+# suspend_and_reboot.sh
+#qm list | grep running | awk -F'[^0-9]*' '$0=$2' | while read -r vm_id; do qm suspend $vm_id --todisk 1; done; reboot
+
+export MFA_DEVICE_ARN="arn:aws:iam::971644952510:mfa/ericom_aws"
+
+aws_login() {
+    # Support ZSH and Bash
+    if [ -n "$ZSH_VERSION" ]; then
+        # Zsh
+        echo -n "Enter MFA Token Code: "
+        read MFA_TOKEN_CODE
+        echo -n "Enter AWS Profile [e.g. prod, dev] (default: 'default'): "
+        read AWS_PROFILE
+        AWS_PROFILE=${AWS_PROFILE:-default}  # Set default value if none provided
+    elif [ -n "$BASH_VERSION" ]; then
+        # Bash
+        read -p "Enter MFA Token Code: " MFA_TOKEN_CODE
+        read -p "Enter AWS Profile [e.g. prod, dev] (default: 'default'): " AWS_PROFILE
+        : ${AWS_PROFILE:=default}  # Set default value if none provided
+    else
+        echo "Unsupported shell."
+        return 1
+    fi
+
+    TEMP_CREDENTIALS=$(aws --profile $AWS_PROFILE sts get-session-token --serial-number $MFA_DEVICE_ARN --token-code $MFA_TOKEN_CODE --output json)
+    if [ $? -eq 0 ]; then
+        export AWS_ACCESS_KEY_ID=$(echo $TEMP_CREDENTIALS | jq -r '.Credentials.AccessKeyId')
+        export AWS_SECRET_ACCESS_KEY=$(echo $TEMP_CREDENTIALS | jq -r '.Credentials.SecretAccessKey')
+        export AWS_SESSION_TOKEN=$(echo $TEMP_CREDENTIALS | jq -r '.Credentials.SessionToken')
+    else
+        echo "Failed to obtain temporary credentials."
+    fi
+    if [ -z "$AWS_SESSION_TOKEN" ] && [ -z "$AWS_ACCESS_KEY_ID" ] && [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+    echo "AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, or AWS_SESSION_TOKEN is an empty string value. Please check!"
+    else
+        echo "Temporary credentials set successfully."
+    fi
+}
+
+alias soc='socat TCP-LISTEN:8006,fork TCP:192.168.2.2:8006 3>&2>&1 > /dev/null &'
+CODE_DIR='/Users/dheeraj/Documents/code'
+LATEST_TAG="v2439_2024_04_02_7_24_50"
+utags() {
+	if [ "$1" == "p" ]; then
+		cd $CODE_DIR/kube-ncx/charts/ncx-as-pod
+		git checkout main
+		git branch -D local-dev 
+		git pull 
+		git checkout local-dev
+		sed -i ''  "s/\(ericomsecurity\/cp-app-ncx-service-gateway:\).*/\1${LATEST_TAG}/g" values.yaml
+		sed -i ''  "s/\(ericomsecurity\/cp-app-ncx-6wind:\).*/\1${LATEST_TAG}/g" values.yaml
+		gd
+	elif [ "$1" == "c" ]; then
+		git add values.yaml 
+		git commit -m "Reverted ncos/6wind image tags to latest: $LATEST_TAG"
+	elif [ "$1" == "h" ]; then
+		echo -e "utags p : (pull updated local-dev branch and update) \nutags c : Add and commit"
+	else
+		sed -i ''  "s/\(ericomsecurity\/cp-app-ncx-service-gateway:\).*/\1${LATEST_TAG}/g" values.yaml
+		sed -i ''  "s/\(ericomsecurity\/cp-app-ncx-6wind:\).*/\1${LATEST_TAG}/g" values.yaml
+		gd
+  fi
+}
+sshn() { echo $@ | sed "s/\<privateKey\>/\~\/\.ssh\/id_rsa/g" | pbcopy ; }
+
+utok() { 
+		sed -i ''  "s/\(token \= \).*/\1\"${AWS_SESSION_TOKEN}\"/g" /Users/dheeraj/Documents/code/Jenkins-Configuration-as-code/DevOps/python/terra_py/terra_py.py 
+}
