@@ -394,3 +394,4 @@ sshn() { echo $@ | sed "s/\<privateKey\>/\~\/\.ssh\/id_rsa/g" | pbcopy ; }
 utok() { 
 		sed -i ''  "s/\(token \= \).*/\1\"${AWS_SESSION_TOKEN}\"/g" /Users/dheeraj/Documents/code/Jenkins-Configuration-as-code/DevOps/python/terra_py/terra_py.py 
 }
+mergeVid() { ffmpeg -i $1 -i $2 -c:v copy -c:a copy ai_session_$3.mp4; }
