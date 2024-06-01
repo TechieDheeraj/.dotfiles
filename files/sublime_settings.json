@@ -1,0 +1,10 @@
+{
+		"vintage_ctrl_keys": true,
+		"vintage_start_in_command_mode": true,
+
+
+	"color_scheme": "Monokai.sublime-color-scheme",
+	"ignored_packages": [""],
+	"font_size": 14
+}
+
