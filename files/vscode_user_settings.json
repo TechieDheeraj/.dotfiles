@@ -50,7 +50,20 @@
     "playwright.env": {},
     "git.openRepositoryInParentFolders": "never",
     "gitlens.graph.dateFormat": "",
+    "[python]": {
+        "editor.formatOnType": true
+    },
+    "python.terminal.activateEnvironment": true,
+    "python.venvPath": "/Users/r00tdk/Documents/code/venv",
     "python.defaultInterpreterPath": "/Users/dheeraj/Documents/code/Jenkins-Configuration-as-code/DevOps/environment-managment/new_cluster_generation/venv/bin/python",
+    "jupyter.notebookFileRoot": "${workspaceRoot}",
     "cmake.showOptionsMovedNotification": false,
-    "security.workspace.trust.untrustedFiles": "open"
+    "security.workspace.trust.untrustedFiles": "open",
+    "debug.allowBreakpointsEverywhere": true,
+    "debug.showBreakpointsInOverviewRuler": true,
+    "lldb.launch.breakpointMode": "path",
+    "go.toolsManagement.autoUpdate": true,
+    "go.toolsEnvVars": {
+        "GO111MODULE": "on"
+    }
 }
