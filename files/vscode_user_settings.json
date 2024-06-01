@@ -62,8 +62,20 @@
     "debug.allowBreakpointsEverywhere": true,
     "debug.showBreakpointsInOverviewRuler": true,
     "lldb.launch.breakpointMode": "path",
+
+    // Golang Settings
+    "go.useLanguageServer": true,
+    "[go]": {
+        "editor.formatOnSave": true
+    },
+    "gopls": {
+        "usePlaceholders": true,
+        "staticcheck": false,
+        "deepCompletion": true,
+        "completeUnimported": true
+    },
     "go.toolsManagement.autoUpdate": true,
     "go.toolsEnvVars": {
         "GO111MODULE": "on"
-    }
+    },
 }
