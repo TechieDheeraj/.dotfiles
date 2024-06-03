@@ -7,7 +7,6 @@
     "editor.fontSize": 14,
     "workbench.editor.enablePreviewFromQuickOpen": true,
     "workbench.editor.enablePreview": false,
-    "workbench.iconTheme": "Monokai Pro Icons",
     "window.zoomLevel": 1,
     "yaml.schemas": {
         "file:///Users/dheeraj/.vscode/extensions/docsmsft.docs-yaml-1.0.1/dist/toc.schema.json": "/toc\\.yml/i"
@@ -77,5 +76,5 @@
     "go.toolsManagement.autoUpdate": true,
     "go.toolsEnvVars": {
         "GO111MODULE": "on"
-    },
+    }
 }
