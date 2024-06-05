@@ -65,7 +65,10 @@
     // Golang Settings
     "go.useLanguageServer": true,
     "[go]": {
-        "editor.formatOnSave": true
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": false
+        }
     },
     "gopls": {
         "usePlaceholders": true,
