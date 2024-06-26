@@ -6,7 +6,6 @@ set -g prefix '~'
 bind-key '~' send-prefix
 #bind-key ` last-window   #toggle 
 
-
 set-option -g status-bg colour235 #base02
 set-option -g status-fg colour136 #yellow
 #set-option -g status-attr default
@@ -170,3 +169,24 @@ if-shell "[[ `tmux -V` == *1.9* ]]" 'unbind %; bind % split-window -h -c "#{pane
 #setw -g window-status-bell-attr bold
 #setw -g window-status-bell-fg colour255
 #setw -g window-status-bell-bg colour1
+
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @plugin 'tmux-plugins/tmux-continuum'
+set -g @plugin 'tmux-plugins/tmux-yank'
+set -g @plugin 'tmux-plugins/tmux-pain-control'
+set -g @plugin 'tmux-plugins/tmux-copycat'
+set -g @plugin 'tmux-plugins/tmux-cpu'
+
+set -g @continuum-restore 'on'
+set -g @resurrect-save 's'
+set -g @resurrect-restore 'r'
+set -g @continuum-save-interval '10'
+set -g @continuum-boot 'on'
+set -g @resurrect-capture-pane-contents 'on'
+
+resurrect_dir="$HOME/.tmux/resurrect"
+set -g @resurrect-dir $resurrect_dir
+set -g @resurrect-hook-post-save-all 'target=$(readlink -f $resurrect_dir/last); sed "s| --cmd .*-vim-pack-dir||g; s|/etc/profiles/per-user/$USER/bin/||g; s|/home/$USER/.nix-profile/bin/||g" $target | sponge $target'
+
+run '~/.tmux/plugins/tpm/tpm'

@@ -764,6 +764,32 @@
 			<key>Version</key>
 			<integer>1</integer>
 		</dict>
+		<key>0x3c-0x120000-0x2b</key>
+		<dict>
+			<key>Action</key>
+			<integer>51</integer>
+			<key>Apply Mode</key>
+			<integer>4</integer>
+			<key>Escaping</key>
+			<integer>2</integer>
+			<key>Text</key>
+			<string></string>
+			<key>Version</key>
+			<integer>2</integer>
+		</dict>
+		<key>0x3e-0x120000-0x2f</key>
+		<dict>
+			<key>Action</key>
+			<integer>52</integer>
+			<key>Apply Mode</key>
+			<integer>4</integer>
+			<key>Escaping</key>
+			<integer>2</integer>
+			<key>Text</key>
+			<string></string>
+			<key>Version</key>
+			<integer>2</integer>
+		</dict>
 		<key>0x9-0x40000</key>
 		<dict>
 			<key>Action</key>
@@ -1761,6 +1787,8 @@
 			<false/>
 			<key>Send Terminal Generated Alerts</key>
 			<true/>
+			<key>Set Local Environment Vars</key>
+			<integer>0</integer>
 			<key>Shortcut</key>
 			<string></string>
 			<key>Silence Bell</key>
