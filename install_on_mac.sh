@@ -13,8 +13,8 @@ ln -sf ~/.bashrc ~/.bash_profile
 cp -f ./vimrc ~/.vimrc
 cp -f ./screenrc ~/.screenrc
 cp -f ./tmux.conf_mac ~/.tmux.conf 
-mkdir -p ~/.tmux 2>&1 > /dev/null
-cp -rf ./tmux/* ~/.tmux/*
+rm -rf ~/.tmux 2>&1 > /dev/null
+cp -rf ./tmux ~/.tmux
 mkdir -p ~/.vim 2>&1 > /dev/null
 cp -rf ./vim/ ~/.vim
 cd ~/.vim/headers/bits; /usr/bin/g++ --std=c++17 -w stdc++.h; cd -; 
