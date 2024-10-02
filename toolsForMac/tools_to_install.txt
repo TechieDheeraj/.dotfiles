@@ -1,0 +1,11 @@
+Alfred 5.5
+Monitor Control
+Amphetamine (path_to_copy_plist : $HOME/Library/Containers/com.if.Amphetamine/Data/Library/Preferences/)
+TempBox
+Cheatsheet
+AppCleaner
+DropZone 4
+Rectangle
+Scroll Reverser
+Sensible Side Buttons
+Cursor (AI Editor)
