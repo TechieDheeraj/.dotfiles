@@ -120,9 +120,9 @@ fi
 
 # MY CHANGES
 
-#export GOROOT=/usr/local/go
-#export GOPATH=$HOME/go
-#export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+export GOROOT=/usr/local/go
+export GOPATH=$HOME/go
+export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 export VIMPATH=$HOME/.vim/
 
 parse_git_branch() {
@@ -222,7 +222,7 @@ alias chkport='sudo netstat -nplt'
 alias chkportu='sudo netstat -nplu'
 #alias g++='g++ --std=c++17 -I~/.vim/headers -include-pch ~/.vim/headers/bits/stdc++.h.gch'
 #g++(){ /usr/bin/g++ --std=c++17 -I$VIMPATH/headers -include-pch $VIMPATH/headers/bits/stdc++.h.gch -Wall -Wno-misleading-indentation -fsanitize=address -fsanitize=undefined $@ -o a.out && ./a.out;}
-g++(){ /usr/bin/g++ --std=c++17 -I$VIMPATH/headers -include-pch $VIMPATH/headers/bits/stdc++.h.gch -Wno-misleading-indentation -Wno-unknown-pragmas -fsanitize=undefined $@ -o a.out && ./a.out;}
+#g++(){ /usr/bin/g++ --std=c++17 -I$VIMPATH/headers -include-pch $VIMPATH/headers/bits/stdc++.h.gch -Wno-misleading-indentation -Wno-unknown-pragmas -fsanitize=undefined $@ -o a.out && ./a.out;}
 fime() { grep -irn $1 ~/.bashrc; }
 tat() { tmux att -t $1; }
 export EDITOR=vim
@@ -258,7 +258,8 @@ export CLICOLOR=1
 alias dsleep='sudo pmset -a disablesleep 1'
 alias esleep='sudo pmset -a disablesleep 0'
 #alias venv='source /Users/r00tdk/Documents/code/venv/bin/activate'
-alias venv='source /Users/dheeraj/Documents/code/Jenkins-Configuration-as-code/venv/bin/activate'
+alias venv='source /Users/r00tdk/Documents/code/turing/venv/bin/activate'
+#alias venv='source /Users/dheeraj/Documents/code/Jenkins-Configuration-as-code/venv/bin/activate'
 alias sshdel='ssh-add -D'
 sshadd() {
   if [ "$1" == "p" ]; then
@@ -267,7 +268,7 @@ sshadd() {
     ssh-add ~/.ssh/id_rsa
   fi
  }
- alias devm='ssh dkakkar@10.79.244.38'
+ #alias ddd='ssh dheeraj@devvm'
  alias uat='ssh dkakkar@10.79.244.42'
  alias llvm1='ssh dkakkar@10.79.244.70'
 HOMEBREW_NO_INSTALL_CLEANUP=TRUE
@@ -312,11 +313,11 @@ ecrlogin() {
   export CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain cradlepoint --domain-owner 737819302384 --query authorizationToken --output text`
   export PIP_INDEX_URL=https://aws:$CODEARTIFACT_AUTH_TOKEN@cradlepoint-737819302384.d.codeartifact.us-west-2.amazonaws.com/pypi/cp-pypi-cache/simple/
 }
-tinyip="192.168.0.246"
-alias tiny='ssh -X $tinyip'
+tinyip=devvm
+alias tiny='ssh -X dheeraj@$tinyip'
 tinycp() { scp -r $@ dheeraj@$tinyip:~/Downloads/; }
-bigip="192.168.0.15"
-alias big='sshpass -p dkkr ssh -X $bigip'
+bigip="192.168.0.246"
+alias big='sshpass -p dkkr ssh -X dheeraj@$bigip'
 bipcp() { scp -r $@ dheeraj@$bigip:~/Downloads/; }
 alias kgp='kubectl get pods'
 kgc() { kubectl get pods $1 -o jsonpath='{.spec.containers[*].name}'; }
@@ -394,4 +395,18 @@ sshn() { echo $@ | sed "s/\<privateKey\>/\~\/\.ssh\/id_rsa/g" | pbcopy ; }
 utok() { 
 		sed -i ''  "s/\(token \= \).*/\1\"${AWS_SESSION_TOKEN}\"/g" /Users/dheeraj/Documents/code/Jenkins-Configuration-as-code/DevOps/python/terra_py/terra_py.py 
 }
-mergeVid() { ffmpeg -i $1 -i $2 -c:v copy -c:a copy ai_session_$3.mp4; }
+mvid() { ffmpeg -i $1 -i $2 -c:v copy -c:a copy ai_session_$3.mp4; }
+export GO111MODULE=on
+
+# Added by OrbStack: command-line tools and integration
+# Comment this line if you don't want it to be added again.
+source ~/.orbstack/shell/init.bash 2>/dev/null || :
+
+##
+# Your previous /Users/r00tdk/.bash_profile file was backed up as /Users/r00tdk/.bash_profile.macports-saved_2024-11-17_at_19:19:32
+##
+
+# MacPorts Installer addition on 2024-11-17_at_19:19:32: adding an appropriate PATH variable for use with MacPorts.
+export PATH="/opt/local/bin:/opt/local/sbin:$PATH"
+# Finished adapting your PATH environment variable for use with MacPorts.
+alias pcm='ssh tiny@192.168.1.20'

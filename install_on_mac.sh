@@ -8,6 +8,7 @@ brew install cmake
 brew install tmux
 brew install rectangle
 brew install --cask scroll-reverser
+sudo port install btop
 
 echo -e "Copying all dotfiles \n"
 cp -f ./bashrc_mac ~/.bashrc
