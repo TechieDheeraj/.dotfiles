@@ -9,3 +9,8 @@ Rectangle
 Scroll Reverser
 Sensible Side Buttons
 Cursor (AI Editor)
+Sublime Text 4:
+	Enable license:
+		sudo perl -pi -e 's/\x09\x15\x40\x39....\x2a\x79\x1f\x53\x08\x11\x40\x39\x8b\x00\x80\x52\x2b\x01\x1f\x33/\x29\x00\x80\x52\x09\x15\x00\x39\x0a\x00\x80\x52\x8b\x00\x80\x52\x1f\x20\x03\xd5\x08\x11\x40\x39/' /Applications/Sublime\ Text.app/Contents/MacOS/sublime_text
+		sudo codesign --sign - --force --deep /Applications/Sublime\ Text.app
+

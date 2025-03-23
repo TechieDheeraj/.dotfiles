@@ -1,0 +1,47 @@
+diff --git a/init.lua b/init.lua
+index cd15458..fb7719b 100644
+--- a/init.lua
++++ b/init.lua
+@@ -31,3 +31,18 @@ require("mappings")
+ vim.cmd("source " .. vim.fs.joinpath(config_dir, "viml_conf/plugins.vim"))
+ -- colorscheme settings
+ require("colorschemes")
++
++vim.opt.mouse='a'
++vim.keymap.set('n', '<leader>sw', require('telescope.builtin').grep_string, {desc = '[S]earch current [W]ord'})
++vim.api.nvim_set_keymap('n', '<leader>fl', ':NvimTreeFocus<CR>', { noremap = true, silent = true })
++vim.api.nvim_set_keymap('n', '<leader>fm', ':wincmd p<CR>', { noremap = true, silent = true })
++-- Map <leader>bb to toggle between current and last buffer
++vim.api.nvim_set_keymap('n', '<leader>bb', ':b#<CR>', { noremap = true, silent = true })
++vim.api.nvim_set_keymap('n', '<Tab>', ':bnext<CR>', { noremap = true, silent = true })
++vim.api.nvim_set_keymap('n', '<S-Tab>', ':bprevious<CR>', { noremap = true, silent = true })
++vim.api.nvim_set_keymap('n', '<leader>bd', ':bd<CR>', { noremap = true, silent = true })
++vim.api.nvim_set_keymap('n', '<leader>ss', ':Telescope lsp_dynamic_workspace_symbols<CR>', { noremap = true, silent = true })
++-- Set keymap to toggle NeoTree
++vim.api.nvim_set_keymap('n', '<leader>fi', ':NvimTreeToggle<CR>', { noremap = true, silent = true })
++vim.g.nvim_tree_respect_buf_cwd = 1
++vim.opt.wrap = true
+diff --git a/lua/config/nvim-tree.lua b/lua/config/nvim-tree.lua
+index 6bf653d..b4bb091 100644
+--- a/lua/config/nvim-tree.lua
++++ b/lua/config/nvim-tree.lua
+@@ -9,7 +9,7 @@ nvim_tree.setup {
+   hijack_unnamed_buffer_when_opening = false,
+   open_on_tab = false,
+   sort_by = "name",
+-  update_cwd = false,
++  update_cwd = true,
+   view = {
+     width = 30,
+     side = "left",
+@@ -36,8 +36,8 @@ nvim_tree.setup {
+     auto_open = true,
+   },
+   update_focused_file = {
+-    enable = false,
+-    update_cwd = false,
++    enable = true,
++    update_cwd = true,
+     ignore_list = {},
+   },
+   system_open = {

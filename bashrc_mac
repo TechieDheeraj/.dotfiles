@@ -398,6 +398,35 @@ utok() {
 mvid() { ffmpeg -i $1 -i $2 -c:v copy -c:a copy ai_session_$3.mp4; }
 export GO111MODULE=on
 
+### MANAGED BY RANCHER DESKTOP START (DO NOT EDIT)
+export PATH="/Users/ekakdhe/.rd/bin:$PATH"
+### MANAGED BY RANCHER DESKTOP END (DO NOT EDIT)
+export DOCKER_DEFAULT_PLATFORM=linux/amd64
+alias rp='echo /data/ncos_mnt/data/ncos_mnt/policy/rego | pbcopy'
+#6wl() { sshpass -p 6windos ssh -p 9900 root@buildvm; }
+#6wcp() { scp -P 9900 -r $@ root@buildvm:/tmp/sixwind/; }
+ncxl() { sshpass -p Tryh@rd33r  ssh -p 9901 admin@buildvm;} # then run 1. su-cmds and 2. ncxsh
+##
+# Your previous /Users/ekakdhe/.bash_profile file was backed up as /Users/ekakdhe/.bash_profile.macports-saved_2024-08-28_at_13:08:00
+##
+# MacPorts Installer addition on 2024-08-28_at_13:08:00: adding an appropriate PATH variable for use with MacPorts.
+export PATH="/opt/local/bin:/opt/local/sbin:~/.local/bin:$PATH"
+# Finished adapting your PATH environment variable for use with MacPorts.
+# Added by OrbStack: command-line tools and integration
+# Comment this line if you don't want it to be added again.
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+export LC_CTYPE=en_US.UTF-8
+[[ -s "/Users/ekakdhe/.gvm/scripts/gvm" ]] && source "/Users/ekakdhe/.gvm/scripts/gvm"
+Rv(){ remote-viewer $1 ;}
+# Tidy for macOS is adding the new path for Tidy.
+export PATH=/usr/local/bin:$PATH
+alias awsn='/opt/homebrew//bin/aws'
+alias kctl='/Users/ekakdhe/Documents/pkgs/kubectl'
+alias lserv='ssh root@172.232.110.21'
+alias gp='GOPRIVATE=gitlab.private.aws.cradlepointecm.com ' 
+
+
 # Added by OrbStack: command-line tools and integration
 # Comment this line if you don't want it to be added again.
 source ~/.orbstack/shell/init.bash 2>/dev/null || :
@@ -410,3 +439,74 @@ source ~/.orbstack/shell/init.bash 2>/dev/null || :
 export PATH="/opt/local/bin:/opt/local/sbin:$PATH"
 # Finished adapting your PATH environment variable for use with MacPorts.
 alias pcm='ssh tiny@192.168.1.20'
+
+devvm() { sshpass -p Tryh@rd3r ssh  ddheeraj@blr-lhvz8i.bangalore.corp.akamai.com; }
+alias vim='nvim'
+#export PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME}: ${PWD}\007"'
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+export PATH=/Users/ddheeraj/.nvm/versions/node/v23.1.0/bin:/Users/ddheeraj/Documents/code/venv/bin:/opt/homebrew/opt/node@20/bin:/Users/r00tdk/Documents/burpSuiteMac/jdk-15.0.2.jdk/Contents/Home/bin:/opt/homebrew/bin:/Users/ddheeraj/Documents/code/venv/bin:/opt/homebrew/opt/node@20/bin:/Users/r00tdk/Documents/burpSuiteMac/jdk-15.0.2.jdk/Contents/Home/bin:/opt/homebrew/bin:/opt/homebrew/opt/node@20/bin:/Users/r00tdk/Documents/burpSuiteMac/jdk-15.0.2.jdk/Contents/Home/bin:/opt/homebrew/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/usr/local/munki:/Applications/kitty.app/Contents/MacOS::/Users/ddheeraj/tools/ripgrep/:/Users/ddheeraj/tools/ripgrep/
+export P4PORT="rsh:ssh -q -a -x -l p4ssh -q -x p4.source.akamai.com /bin/true"
+export P4USER=ddheeraj
+export P4EDITOR=vim
+#keychain --noask --eval /home/ddheeraj/.ssh/deployed/ddheeraj-deployed-2024-09-24
+#keychain --noask --eval /home/ddheeraj/.ssh/internal/ddheeraj-internal-2024-09-24
+alias sudoc="~/sudo_expect.sh"
+alias dsleep='sudo pmset -a disablesleep 1'
+alias esleep='sudo pmset -a disablesleep 0'
+alias kcamjenkins='ssh -A root@172.25.232.224'
+alias kquijenkins='ssh -A root@198.18.42.98'
+alias jserver='ssh -A root@198.18.88.234'
+alias njserver="sshpass -p YAPadmin ssh yap@172.25.148.254"
+##
+# Your previous /Users/ddheeraj/.bash_profile file was backed up as /Users/ddheeraj/.bash_profile.macports-saved_2024-11-14_at_23:30:45
+##
+# MacPorts Installer addition on 2024-11-14_at_23:30:45: adding an appropriate PATH variable for use with MacPorts.
+export PATH="/opt/local/bin:/opt/local/sbin:$PATH"
+# Finished adapting your PATH environment variable for use with MacPorts.
+export alsi1137="/Users/ddheeraj/Documents/code/alsi_code/projects/common/os-alsi11-11.37.0/akamai/os-alsi11/"
+export alsi228="/Users/ddheeraj/Documents/code/alsi_code/projects/common/os-alsi22-22.8/akamai/os-alsi22/"
+export alsi2211="/Users/ddheeraj/Documents/code/alsi_code/projects/common/os-alsi22-22.11/akamai/os-alsi22/"
+export lvmip="172.24.235.223"
+alias lvm="sshpass -p dkkr ssh $lvmip"
+export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"
+ljob() {
+  fullPath=`pwd`
+  curDir=`basename $fullPath`
+  if [ "$1" == "t" ]; then
+    temp_job="${curDir}_test"
+    jobName=$temp_job
+  elif [ "$1" == "c" ]; then
+    jobName=$curDir
+  elif [ "$1" == "n" ]; then
+    jobName="$3"
+  fi
+  java -jar  /Users/ddheeraj/Downloads/jenkins-cli.jar -s http://172.25.148.254:8080/ create-job $jobName < $2; }
+cpp()
+{
+  fullPath=`pwd`
+  curDir=`basename $fullPath`
+  echo "Current directory is $curDir"
+  tdir="/Users/ddheeraj/Documents/jenkinsJobsBackup/$curDir"
+  if [ ! -d "$tdir" ]; then
+    mkdir -p $tdir
+  fi
+  cp config.xml $tdir/config_previous.xml
+  cp config.xml $tdir/config_previous.xml_orig
+}
+# SSH-AGENT-START
+#if [[ $(ssh-add -l | grep 'no identities'| wc -l) -eq 1 ]]; then
+#    ssh-add ~/.ssh/internal/ddheeraj-internal-latest
+#    ssh-add ~/.ssh/internal/ddheeraj-internal-previous
+#    ssh-add ~/.ssh/deployed/ddheeraj-deployed-latest
+#    ssh-add ~/.ssh/deployed/ddheeraj-deployed-previous
+#    ssh-add ~/.ssh/linode/ddheeraj-linode-latest
+#    ssh-add ~/.ssh/linode/ddheeraj-linode-previous
+#fi
+# SSH-AGENT-END
+CONFIG22="/Users/ddheeraj/Documents/code/alsi_code/projects/kernel/regression/configs/pltest/kernelconfig.alsi22.ext4.ipv6"
+export PATH=/Users/ddheeraj/.pyenv/shims/:$PATH
+alias crows='ssh -R 7500 172.25.232.229'
+crow() { ssh -J ddheeraj@jumpbox-1.labkrk2.pl.stable.devcloud.linode.com root@h$1-labkrk2.devcloud.linode.com; }
+unset TMUX
