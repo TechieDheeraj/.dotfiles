@@ -1,8 +1,8 @@
 diff --git a/init.lua b/init.lua
-index cd15458..fb7719b 100644
+index cd15458..3cde4eb 100644
 --- a/init.lua
 +++ b/init.lua
-@@ -31,3 +31,18 @@ require("mappings")
+@@ -31,3 +31,25 @@ require("mappings")
  vim.cmd("source " .. vim.fs.joinpath(config_dir, "viml_conf/plugins.vim"))
  -- colorscheme settings
  require("colorschemes")
@@ -20,7 +20,14 @@ index cd15458..fb7719b 100644
 +-- Set keymap to toggle NeoTree
 +vim.api.nvim_set_keymap('n', '<leader>fi', ':NvimTreeToggle<CR>', { noremap = true, silent = true })
 +vim.g.nvim_tree_respect_buf_cwd = 1
++vim.g.python3_host_prog = '/opt/homebrew/bin/python3'
 +vim.opt.wrap = true
++vim.api.nvim_create_autocmd("BufEnter", {
++  pattern = "*",
++  callback = function()
++    vim.opt_local.modifiable = true
++  end,
++})
 diff --git a/lua/config/nvim-tree.lua b/lua/config/nvim-tree.lua
 index 6bf653d..b4bb091 100644
 --- a/lua/config/nvim-tree.lua
