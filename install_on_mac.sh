@@ -1,27 +1,35 @@
-# Run this script to install all dotfiles on MacOS
+Run this script to install all dotfiles on MacOS
 
 echo -e "Installing tools \n"
 #/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 # Install Kitty
 #curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin
+brew install npm
 brew install cmake
 brew install tmux
 brew install rectangle
 brew install --cask scroll-reverser
 brew install cirruslabs/cli/tart
+brew install python3
+pip3 install pynvim --user --break-system-packages
+pip3 install pyright --user --break-system-packages
+brew install ripgrep
+
 sudo port install btop
+npm install -g pyright
+npm install -g vim-language-server
 
 echo -e "Copying all dotfiles \n"
 cp -f ./bashrc_mac ~/.bashrc
 ln -sf ~/.bashrc ~/.bash_profile
 cp -f ./vimrc ~/.vimrc
 cp -f ./screenrc ~/.screenrc
-cp -f ./tmux.conf_mac ~/.tmux.conf 
+cp -f ./tmux.conf_mac ~/.tmux.conf
 rm -rf ~/.tmux 2>&1 > /dev/null
 cp -rf ./tmux ~/.tmux
 mkdir -p ~/.vim 2>&1 > /dev/null
 cp -rf ./vim/ ~/.vim
-cd ~/.vim/headers/bits; /usr/bin/g++ --std=c++17 -w stdc++.h; cd -; 
+cd ~/.vim/headers/bits; /usr/bin/g++ --std=c++17 -w stdc++.h; cd -;
 mkdir -p ~/.config/kitty 2>&1 > /dev/null
 cp -rf ./files/config/kitty/ ~/.config/kitty
 cd ~/.config/; git clone https://github.com/jdhao/nvim-config.git nvim 2>&1 > /dev/null ; cd nvim; patch -p1 ./files/nvim.patch
