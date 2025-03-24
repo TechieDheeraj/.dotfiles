@@ -1,0 +1,26 @@
+---
+services:
+  tailscale-nginx:
+    image: tailscale/tailscale:latest
+    hostname: tailscale-nginx
+    network_mode: host 
+    environment:
+      - TS_AUTHKEY=tskey-auth-kAEUFgJ4s921CNTRL-T3brqjmiyK6GGY4k1wJwK6JyEAoFGjTH
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+    volumes:
+      - ${PWD}/tailscale-nginx/state:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+    restart: unless-stopped
+  nginx:
+    image: nginx
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - tailscale-nginx
+    #network_mode: service:tailscale-nginx
+    network_mode: host 
+

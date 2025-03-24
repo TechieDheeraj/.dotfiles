@@ -1,0 +1,32 @@
+# this file is docker-compose.yml
+version: '3.3'
+services:
+  tailscale:
+    container_name: tailscale
+    hostname: tailscale-94
+    image: tailscale/tailscale:stable
+    volumes:
+      - /srv/dev-disk-by-uuid-XXX/tailscale:/var/lib # state data directory
+      - /dev/net/tun:/dev/net/tun # required for tailscale to work
+    cap_add: # required for tailscale to work
+      - net_admin
+      - sys_module
+    network_mode: host
+    environment:
+      - PUID=1000 # I set these PUID / PGID on all my containers
+      - PGID=100
+      - TS_HOSTNAME=
+      - TS_EXTRA_FLAGS=
+#      - TS_USERSPACE=true
+      - TS_STATE_DIR=/var/lib/tailscale/ 
+      - TS_AUTH_ONCE=true
+      - TS_AUTHKEY=tskey-auth-kAEUFgJ4s921CNTRL-T3brqjmiyK6GGY4k1wJwK6JyEAoFGjTH
+    restart: unless-stopped
+    command: 
+#          - git clone 'git://repo.or.cz/socat.git'
+#          - cd socat && make socat -j
+ #        - tailscale
+ #        - tailscale up
+ #        - "--advertise-routes=192.168.1.0/24"
+ #        - "&& tailscale"
+    privileged: true
