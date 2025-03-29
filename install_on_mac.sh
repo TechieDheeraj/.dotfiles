@@ -18,6 +18,7 @@ brew install ripgrep
 sudo port install btop
 npm install -g pyright
 npm install -g vim-language-server
+npm install -g @delance/runtime
 
 echo -e "Copying all dotfiles \n"
 cp -f ./bashrc_mac ~/.bashrc
