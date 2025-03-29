@@ -79,5 +79,6 @@
     "go.toolsManagement.autoUpdate": true,
     "go.toolsEnvVars": {
         "GO111MODULE": "on"
-    }
+    },
+    "workbench.editor.enablePreview": false,
 }
