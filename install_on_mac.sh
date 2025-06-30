@@ -13,7 +13,11 @@ brew install cirruslabs/cli/tart
 brew install python3
 pip3 install pynvim --user --break-system-packages
 pip3 install pyright --user --break-system-packages
+pip3 install 'python-lsp-server[all]' pylsp-mypy python-lsp-isort python-lsp-black --user --break-system-packages
 brew install ripgrep
+brew install neovim
+brew install universal-ctags
+brew upgrade neovim
 
 sudo port install btop
 npm install -g pyright
@@ -33,7 +37,7 @@ cp -rf ./vim/ ~/.vim
 cd ~/.vim/headers/bits; /usr/bin/g++ --std=c++17 -w stdc++.h; cd -;
 mkdir -p ~/.config/kitty 2>&1 > /dev/null
 cp -rf ./files/config/kitty/ ~/.config/kitty
-cd ~/.config/; git clone https://github.com/jdhao/nvim-config.git nvim 2>&1 > /dev/null ; cd nvim; patch -p1 ./files/nvim.patch
+cd ~/.config/; git clone https://github.com/jdhao/nvim-config.git nvim 2>&1 > /dev/null ; cd nvim; patch -p1 < ~/dotfiles/files/nvim.patch
 
 echo -e "All Dotfiles Copied \n"
 vim -c PlugInstall hello -c qa!
