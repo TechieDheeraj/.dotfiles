@@ -121,6 +121,7 @@ fi
 # MY CHANGES
 
 export GOROOT=/usr/local/go
+#export GOROOT=/usr/lib/go
 export GOPATH=$HOME/go
 export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 export VIMPATH=$HOME/.vim/
@@ -215,6 +216,7 @@ alias cp='cp -i'
 alias mv='mv -i'
 alias vi='vim'
 alias ll='ls -lart'
+#alias ll='ls -la -snew'
 alias hiu='history -n'		# get latest history cmds from other terminals too
 alias t='tmux'
 alias tls='tmux list-session'
