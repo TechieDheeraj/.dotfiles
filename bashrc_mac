@@ -512,3 +512,5 @@ export PATH=/Users/ddheeraj/.pyenv/shims/:$PATH
 alias crows='ssh -R 7500 172.25.232.229'
 crow() { ssh -J ddheeraj@jumpbox-1.labkrk2.pl.stable.devcloud.linode.com root@h$1-labkrk2.devcloud.linode.com; }
 unset TMUX
+ct(){ mkdir $1; cd $1; touch $1 model_feedback; cd -; }
+alias vv='source .venv/bin/activate’
