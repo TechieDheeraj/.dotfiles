@@ -514,3 +514,10 @@ crow() { ssh -J ddheeraj@jumpbox-1.labkrk2.pl.stable.devcloud.linode.com root@h$
 unset TMUX
 ct(){ mkdir $1; cd $1; touch $1 model_feedback; cd -; }
 alias vv='source .venv/bin/activate'
+mons() {
+  if [ "$1" == "e" ]; then
+    hyprctl keyword monitor "eDP-1, disable";hyprctl keyword monitor "DP-2, preferred, auto, 1.6"; hyprctl keyword monitor "DP-1, preferred, auto, 1.6"
+  else
+    hyprctl keyword monitor "DP-2, disable"; hyprctl keyword monitor "DP-1, disable"; hyprctl keyword monitor "eDP-1,preferred,auto,1.33333"
+  fi
+}
