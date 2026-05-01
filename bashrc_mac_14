@@ -1,0 +1,593 @@
+# ~/.bashrc: executed by bash(1) for non-login shells.
+# see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
+# for examples
+
+# If not running interactively, don't do anything
+export BASH_SILENCE_DEPRECATION_WARNING=1
+case $- in
+    *i*) ;;
+      *) return;;
+esac
+
+# don't put duplicate lines or lines starting with space in the history.
+# See bash(1) for more options
+HISTCONTROL=ignoreboth
+
+# append to the history file, don't overwrite it
+shopt -s histappend
+
+# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+HISTSIZE=1000
+HISTFILESIZE=2000
+
+# check the window size after each command and, if necessary,
+# update the values of LINES and COLUMNS.
+shopt -s checkwinsize
+
+# If set, the pattern "**" used in a pathname expansion context will
+# match all files and zero or more directories and subdirectories.
+#shopt -s globstar
+
+# make less more friendly for non-text input files, see lesspipe(1)
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+# set variable identifying the chroot you work in (used in the prompt below)
+if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
+    debian_chroot=$(cat /etc/debian_chroot)
+fi
+
+# set a fancy prompt (non-color, unless we know we "want" color)
+case "$TERM" in
+    xterm-color|*-256color) color_prompt=yes;;
+esac
+
+# uncomment for a colored prompt, if the terminal has the capability; turned
+# off by default to not distract the user: the focus in a terminal window
+# should be on the output of commands, not on the prompt
+force_color_prompt=yes
+
+if [ -n "$force_color_prompt" ]; then
+    if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+	# We have color support; assume it's compliant with Ecma-48
+	# (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+	# a case would tend to support setf rather than setaf.)
+	color_prompt=yes
+    else
+	color_prompt=
+    fi
+fi
+
+#if [ "$color_prompt" = yes ]; then
+#    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+#else
+#    PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+#fi
+#unset color_prompt force_color_prompt
+
+# If this is an xterm set the title to user@host:dir
+case "$TERM" in
+xterm*|rxvt*)
+    PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+    ;;
+*)
+    ;;
+esac
+
+# enable color support of ls and also add handy aliases
+if [ -x /usr/bin/dircolors ]; then
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    alias ls='ls --color=auto'
+    #alias dir='dir --color=auto'
+    #alias vdir='vdir --color=auto'
+
+    alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='egrep --color=auto'
+fi
+
+# colored GCC warnings and errors
+#export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+
+# some more ls aliases
+#alias ll='ls -alF'
+alias ls='ls -G'
+alias la='ls -A'
+alias l='ls -CF'
+
+# Add an "alert" alias for long running commands.  Use like so:
+#   sleep 10; alert
+alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+
+# Alias definitions.
+# You may want to put all your additions into a separate file like
+# ~/.bash_aliases, instead of adding them here directly.
+# See /usr/share/doc/bash-doc/examples in the bash-doc package.
+
+if [ -f ~/.bash_aliases ]; then
+    . ~/.bash_aliases
+fi
+
+# enable programmable completion features (you don't need to enable
+# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
+# sources /etc/bash.bashrc).
+if ! shopt -oq posix; then
+  if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+  elif [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+  fi
+fi
+
+# MY CHANGES
+
+export GOROOT=/opt/homebrew/opt/go/libexec
+export GOPATH=$HOME/go
+export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+export VIMPATH=$HOME/.vim/
+
+parse_git_branch() {
+  git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/'
+}
+# Original
+#export PS1='\[\033[01;32m\]welcome ${debian_chroot:+($debain_chroot)}\[\033[01;32m\]\u \nDIR: [ \[\033[33m\]\w \[\033[01;36m\]]\[\033[01;31m\]\n>>> \[\033[00m\]'
+
+source ~/.dotfiles/files/kube-ps1.sh
+export PS1="\[\033[33m\][ \w ] \$(kube_ps1)\$ \[\033[01;36m\]\$(parse_git_branch)\[\033[01;31m\]\n>>> \[\033[00m\]"
+#export PS1="\[\033[33m\][ \w ] \[\033[01;36m\]\$(parse_git_branch)\[\033[01;31m\]\n>>> \[\033[00m\]"
+export PATH=/opt/homebrew/bin:$PATH
+# Funtions
+o () { xdg-open $1; }
+psg () { ps -eaf | grep -i $1; }
+extract() {
+	if [ -f $1 ]; then 
+		case $1 in 
+			*.tgz)		tar -xvzf $1 ;;
+			*.bz2)		bunzip2 $1 ;;
+			*.gz)		gunzip $1 ;;
+			*.zip)		unzip $1 ;;
+			*.tar.bz2)	tar -xvjf $1 ;;
+			*.tar.gz)	tar -xvzf $1 ;;
+			*.tar)		tar -xvf $1 ;;
+			*)			echo -e "\033[01;31mDon't Know How to Extract" ;;
+		esac
+	else
+		echo -e "\033[01;31m$1 is not Valid File"
+	fi
+}
+
+# git
+alias gs="git status"
+alias gr="git remote -v"
+alias gps="git push origin"
+alias gc="git commit -m"
+alias ga="git add"
+alias gl="git log"
+alias gd="git diff"
+alias gdab="git for-each-ref --format '%(refname:short)' refs/heads | xargs git branch -D"
+alias gca="git commit --amend -m"
+alias gch="git checkout"
+alias gchn="git checkout -b"
+alias gf="git fetch -p"
+alias gpo="git pull origin"
+alias gst="git stash"
+alias gsp="git stash pop"
+alias gsc="git stash clear"
+alias gsl="git stash list"
+alias grs="git reset --soft"
+alias grh="git reset --hard"
+alias gspp="gst;gpl;gsp"
+function gg() {
+	ga .
+	gc "$1"
+	gps
+}
+
+:<<comm
+# web dev
+# delete mongodb database
+alias ddb="mongo --quiet --eval 'db.getMongo().getDBNames().forEach(function(i){db.getSiblingDB(i).dropDatabase()})'"
+# load environment variables and start localhost
+alias nodemon="source app-env;nodemon"
+# share localhost for testing
+alias host="ssh -R 80:localhost:1729 ssh.localhost.run"
+comm
+
+alias py="python2"
+alias py3="python3"
+
+alias r="tput reset"
+alias eb="subl ~/.bashrc"
+alias s="subl "
+
+# Aliases
+alias p='cat'
+alias q='exit'
+alias ..='cd ..'
+alias ...='cd ../../'
+alias ....='cd ../../../'
+alias sls='screen -list'
+alias docs='cd ~/Documents'
+alias dloads='cd ~/Downloads'
+alias dtop='cd ~/Desktop'
+#alias ls='ls --color'
+alias rm='rm -i'
+alias cp='cp -i'
+alias mv='mv -i'
+alias vi='vim'
+alias ll='ls -lart'
+alias hiu='history -n'		# get latest history cmds from other terminals too
+alias t='tmux'
+alias tls='tmux list-session'
+alias chkport='sudo netstat -nplt'
+alias chkportu='sudo netstat -nplu'
+#alias g++='g++ --std=c++17 -I~/.vim/headers -include-pch ~/.vim/headers/bits/stdc++.h.pch'
+#g++(){ /usr/bin/g++ --std=c++17 -I$VIMPATH/headers -include-pch $VIMPATH/headers/bits/stdc++.h.pch -Wall -Wno-misleading-indentation -fsanitize=address -fsanitize=undefined $@ -o a.out && ./a.out;}
+gpp(){ /usr/bin/g++ --std=c++17 -I$VIMPATH/headers -include-pch $VIMPATH/headers/bits/stdc++.h.pch -Wno-misleading-indentation -Wno-unknown-pragmas -fsanitize=undefined $@ -o a.out && ./a.out;}
+fime() { grep -irn $1 ~/.bashrc; }
+tat() { tmux att -t $1; }
+export EDITOR=vim
+tou() { touch "$1".ts; }
+ec() { tou $(echo $@ | tr " " "_";); }
+jpa() { . ~/Documents/jupyter/bin/activate; }
+jps() { jpa && jupyter-notebook --no-browser ; }
+jpst() { jpa && jupyter-notebook stop; }
+#export GOPATH=$HOME/go
+#export GOROOT=/usr/local/libexec
+#export PATH=$PATH:$GOPATH/bin
+#export PATH=$PATH:$GOROOT/bin
+export AWS_REGION="us-west-2"
+alias goc='GOOS=linux go build'
+awsfup() { aws lambda update-function-code --function-name $1 --zip-file $2; }
+awsfst() { aws lambda get-function --function-name $1 --query 'Configuration.[State, LastUpdateStatus]';}
+gocov() { go "test" -cover; }
+gotest() { go "test" run -v $1;}
+#gaws() { echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID};AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY};AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}" | pbcopy; } # copy envs with colon sperated string into clipboard
+#zdocr() { docker run --rm -p 2341:2341/tcp -p 15372:15372/tcp -p 8880:8880/tcp -v :/mnt/certs --name <DOCKER_CONTAINER_NAME> <DOCKER_IMAGE_NAME>; }
+export GPG_TTY=$(tty)
+#assume() { OUT=$(aws sts assume-role --role-arn "$@" --role-session-name AWSCLI-Session);  export AWS_ACCESS_KEY_ID=$(echo $OUT | jq -r '.Credentials''.AccessKeyId'); export AWS_SECRET_ACCESS_KEY=$(echo $OUT | jq -r '.Credentials''.SecretAccessKey'); export AWS_SESSION_TOKEN=$(echo $OUT | jq -r '.Credentials''.SessionToken');} # assume role by providing ARN
+#function kpods() { eval "$1=$(kubectl get pods -n <NAMESPACE> | grep -i <POD_NAME> | cut -d' ' -f1)";}
+#function klpods() { kubectl get pods -n <NAMESPACE> | grep -i <POD_NAME> | cut -d' ' -f1;}
+#function kzl() { local podName; kpods podName; kubectl exec -it $podName -n <NAMESPACE> /bin/bash; }
+#function klogs() { local podName; kpods podName; kubectl logs $podName -n <NAMESPACE>; }
+function goamd() { GOOS=linux GOARCH=amd64 go build ; } # build for amd processor
+#function kcp() { local podName; kpods podName; kubectl cp $1 <NAMESPACE>/$podName:/tmp/; }
+
+export CLICOLOR=1
+#function gtf { aws s3 cp <S3_ARN> .; }
+#function sdocr { docker run -it --rm=true -u root -v ${PWD}:/tmp/project -w /tmp/project -v ~/.m2:/root/.m2 --entrypoint /bin/bash <IMAGE_NAME:TAG_NAME>; }
+alias dsleep='sudo pmset -a disablesleep 1'
+alias esleep='sudo pmset -a disablesleep 0'
+alias venv='source /Users/$USER/Documents/code/venv/bin/activate'
+#alias venv='source /Users/r00tdk/Documents/code/turing/venv/bin/activate'
+#alias venv='source /Users/dheeraj/Documents/code/Jenkins-Configuration-as-code/venv/bin/activate'
+alias sshdel='ssh-add -D'
+sshadd() {
+  if [ "$1" == "p" ]; then
+    ssh-add ~/.ssh/id_rsa_personal
+  else
+    ssh-add ~/.ssh/id_rsa
+  fi
+ }
+ #alias ddd='ssh dheeraj@devvm'
+ alias uat='ssh dkakkar@10.79.244.42'
+ alias llvm1='ssh dkakkar@10.79.244.70'
+HOMEBREW_NO_INSTALL_CLEANUP=TRUE
+#. "$HOME/.cargo/env"
+export PATH='/Users/dheeraj/Documents/burpSuiteMac/jdk-15.0.2.jdk/Contents/Home/bin':$PATH
+alias burp='/Users/dheeraj/Documents/burpSuiteMac/jdk-15.0.2.jdk/Contents/Home/bin/java -javaagent:/Users/dheeraj/Downloads/Burp\ Pro\ 2020.12\ +\ Loader/BurpSuiteLoader_v2020.12.jar -noverify -jar /Users/r00tdk/Downloads/Burp\ Pro\ 2020.12\ +\ Loader/burpsuite_pro_v2020.12.jar &'
+export TERM='screen-256color'
+alias apt-get='apt-fast'
+alias awsume=". awsume"
+alias rot13="tr 'A-Za-z0-9' 'N-ZA-Mn-za-m5-90-4'"
+alias unrot13="tr 'N-ZA-Mn-za-m5-90-4' 'A-Za-z0-9'"
+#gittok="AUD8pmqSZHu1DzEJAxSxLzEAFmpX"
+#gittok="OWcyZjJSNlVtT3FJMU5xb3FaWDIK"
+#alias cpto=$(echo $gittok | unrot13 | base64 -d | xsel -ib)
+cpto() { echo $1 | base64 -d | unrot13 | pbcopy; }
+export PATH=/Users/dheeraj/Downloads/node-v18.18.2-darwin-x64/bin:$PATH
+export KUBECONFIG=$HOME/.kube/config
+export ARTIFACTORY_API_KEY=AKCp8pQGnsPjB6WXZAndwhQZ2cJb4L8RA6fSX7hU4KjFDJEPgqT7ipD647DjC4QrfR6C1kfeY
+export ARTIFACTORY_USER=vaibhav.sood
+
+[[ -e "/Users/dheeraj/lib/oci_autocomplete.sh" ]] && source "/Users/dheeraj/lib/oci_autocomplete.sh"
+
+#AWSume alias to source the AWSume script
+
+#Auto-Complete function for AWSume
+_awsume() {
+    local cur prev opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    opts=$(awsume-autocomplete)
+    COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+    return 0
+}
+complete -F _awsume awsume
+
+ecrlogin() {
+  awsume cp-ecr
+	export $(awsudo cp-ecr)
+#  aws ecr get-login-password | docker login --username AWS --password-stdin 737819302384.dkr.ecr.us-west-2.amazonaws.com
+  aws --profile cp-ecr ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 737819302384.dkr.ecr.us-west-2.amazonaws.com
+  export CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain cradlepoint --domain-owner 737819302384 --query authorizationToken --output text`
+  export PIP_INDEX_URL=https://aws:$CODEARTIFACT_AUTH_TOKEN@cradlepoint-737819302384.d.codeartifact.us-west-2.amazonaws.com/pypi/cp-pypi-cache/simple/
+}
+#tinyip=devvm
+tinyip=192.168.215.2
+alias tiny='ssh -X -p 8008 dheeraj@$tinyip'
+tinycp() { scp -r $@ dheeraj@$tinyip:~/Downloads/; }
+#bigip="192.168.0.246"
+bigip="192.168.215.2"
+alias big='sshpass -p dkkr ssh -X -p 8010 dheeraj@$bigip'
+bipcp() { scp -r $@ dheeraj@$bigip:~/Downloads/; }
+alias kgp='kubectl get pods'
+kgc() { kubectl get pods $1 -o jsonpath='{.spec.containers[*].name}'; }
+export PATH="/opt/homebrew/opt/node@20/bin:$PATH"
+katt() { echo "kubectl attach -it deploy/ncx-as-pod -c ncos -n $1" | pbcopy; } 
+
+# suspend_and_shutdown.sh
+#qm list | grep running | awk -F'[^0-9]*' '$0=$2' | while read -r vm_id; do qm suspend $vm_id --todisk 1; done; shutdown -h now
+
+# suspend_and_reboot.sh
+#qm list | grep running | awk -F'[^0-9]*' '$0=$2' | while read -r vm_id; do qm suspend $vm_id --todisk 1; done; reboot
+
+export MFA_DEVICE_ARN="arn:aws:iam::971644952510:mfa/ericom_aws"
+
+aws_login() {
+    # Support ZSH and Bash
+    if [ -n "$ZSH_VERSION" ]; then
+        # Zsh
+        echo -n "Enter MFA Token Code: "
+        read MFA_TOKEN_CODE
+        echo -n "Enter AWS Profile [e.g. prod, dev] (default: 'default'): "
+        read AWS_PROFILE
+        AWS_PROFILE=${AWS_PROFILE:-default}  # Set default value if none provided
+    elif [ -n "$BASH_VERSION" ]; then
+        # Bash
+        read -p "Enter MFA Token Code: " MFA_TOKEN_CODE
+        read -p "Enter AWS Profile [e.g. prod, dev] (default: 'default'): " AWS_PROFILE
+        : ${AWS_PROFILE:=default}  # Set default value if none provided
+    else
+        echo "Unsupported shell."
+        return 1
+    fi
+
+    TEMP_CREDENTIALS=$(aws --profile $AWS_PROFILE sts get-session-token --serial-number $MFA_DEVICE_ARN --token-code $MFA_TOKEN_CODE --output json)
+    if [ $? -eq 0 ]; then
+        export AWS_ACCESS_KEY_ID=$(echo $TEMP_CREDENTIALS | jq -r '.Credentials.AccessKeyId')
+        export AWS_SECRET_ACCESS_KEY=$(echo $TEMP_CREDENTIALS | jq -r '.Credentials.SecretAccessKey')
+        export AWS_SESSION_TOKEN=$(echo $TEMP_CREDENTIALS | jq -r '.Credentials.SessionToken')
+    else
+        echo "Failed to obtain temporary credentials."
+    fi
+    if [ -z "$AWS_SESSION_TOKEN" ] && [ -z "$AWS_ACCESS_KEY_ID" ] && [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+    echo "AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, or AWS_SESSION_TOKEN is an empty string value. Please check!"
+    else
+        echo "Temporary credentials set successfully."
+    fi
+}
+
+alias soc='socat TCP-LISTEN:8006,fork TCP:192.168.2.2:8006 3>&2>&1 > /dev/null &'
+CODE_DIR='/Users/dheeraj/Documents/code'
+LATEST_TAG="v2439_2024_04_02_7_24_50"
+utags() {
+	if [ "$1" == "p" ]; then
+		cd $CODE_DIR/kube-ncx/charts/ncx-as-pod
+		git checkout main
+		git branch -D local-dev 
+		git pull 
+		git checkout local-dev
+		sed -i ''  "s/\(ericomsecurity\/cp-app-ncx-service-gateway:\).*/\1${LATEST_TAG}/g" values.yaml
+		sed -i ''  "s/\(ericomsecurity\/cp-app-ncx-6wind:\).*/\1${LATEST_TAG}/g" values.yaml
+		gd
+	elif [ "$1" == "c" ]; then
+		git add values.yaml 
+		git commit -m "Reverted ncos/6wind image tags to latest: $LATEST_TAG"
+	elif [ "$1" == "h" ]; then
+		echo -e "utags p : (pull updated local-dev branch and update) \nutags c : Add and commit"
+	else
+		sed -i ''  "s/\(ericomsecurity\/cp-app-ncx-service-gateway:\).*/\1${LATEST_TAG}/g" values.yaml
+		sed -i ''  "s/\(ericomsecurity\/cp-app-ncx-6wind:\).*/\1${LATEST_TAG}/g" values.yaml
+		gd
+  fi
+}
+sshn() { echo $@ | sed "s/\<privateKey\>/\~\/\.ssh\/id_rsa/g" | pbcopy ; }
+
+utok() { 
+		sed -i ''  "s/\(token \= \).*/\1\"${AWS_SESSION_TOKEN}\"/g" /Users/dheeraj/Documents/code/Jenkins-Configuration-as-code/DevOps/python/terra_py/terra_py.py 
+}
+mvid() { ffmpeg -i $1 -i $2 -c:v copy -c:a copy ai_session_$3.mp4; }
+export GO111MODULE=on
+
+### MANAGED BY RANCHER DESKTOP START (DO NOT EDIT)
+export PATH="/Users/ekakdhe/.rd/bin:$PATH"
+### MANAGED BY RANCHER DESKTOP END (DO NOT EDIT)
+#export DOCKER_DEFAULT_PLATFORM=linux/amd64
+alias rp='echo /data/ncos_mnt/data/ncos_mnt/policy/rego | pbcopy'
+#6wl() { sshpass -p 6windos ssh -p 9900 root@buildvm; }
+#6wcp() { scp -P 9900 -r $@ root@buildvm:/tmp/sixwind/; }
+ncxl() { sshpass -p Tryh@rd33r  ssh -p 9901 admin@buildvm;} # then run 1. su-cmds and 2. ncxsh
+##
+# Your previous /Users/ekakdhe/.bash_profile file was backed up as /Users/ekakdhe/.bash_profile.macports-saved_2024-08-28_at_13:08:00
+##
+# MacPorts Installer addition on 2024-08-28_at_13:08:00: adding an appropriate PATH variable for use with MacPorts.
+export PATH="/opt/local/bin:/opt/local/sbin:~/.local/bin:$PATH"
+# Finished adapting your PATH environment variable for use with MacPorts.
+# Added by OrbStack: command-line tools and integration
+# Comment this line if you don't want it to be added again.
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+export LC_CTYPE=en_US.UTF-8
+[[ -s "/Users/ekakdhe/.gvm/scripts/gvm" ]] && source "/Users/ekakdhe/.gvm/scripts/gvm"
+Rv(){ remote-viewer $1 ;}
+# Tidy for macOS is adding the new path for Tidy.
+export PATH=/usr/local/bin:$PATH
+alias awsn='/opt/homebrew//bin/aws'
+alias kctl='/Users/ekakdhe/Documents/pkgs/kubectl'
+alias lserv='ssh root@172.232.110.21'
+alias gp='GOPRIVATE=gitlab.private.aws.cradlepointecm.com ' 
+
+
+# Added by OrbStack: command-line tools and integration
+# Comment this line if you don't want it to be added again.
+source ~/.orbstack/shell/init.bash 2>/dev/null || :
+
+##
+# Your previous /Users/r00tdk/.bash_profile file was backed up as /Users/r00tdk/.bash_profile.macports-saved_2024-11-17_at_19:19:32
+##
+
+# MacPorts Installer addition on 2024-11-17_at_19:19:32: adding an appropriate PATH variable for use with MacPorts.
+export PATH="/opt/local/bin:/opt/local/sbin:$PATH"
+# Finished adapting your PATH environment variable for use with MacPorts.
+alias pcm='ssh tiny@192.168.1.25'
+
+devvm() { sshpass -p Tryh@rd3r ssh  ddheeraj@blr-lhvz8i.bangalore.corp.akamai.com; }
+alias vim='nvim'
+#export PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME}: ${PWD}\007"'
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+#export PATH=/Users/ddheeraj/.nvm/versions/node/v23.1.0/bin:/Users/ddheeraj/Documents/code/venv/bin:/opt/homebrew/opt/node@20/bin:/Users/r00tdk/Documents/burpSuiteMac/jdk-15.0.2.jdk/Contents/Home/bin:/opt/homebrew/bin:/Users/ddheeraj/Documents/code/venv/bin:/opt/homebrew/opt/node@20/bin:/Users/r00tdk/Documents/burpSuiteMac/jdk-15.0.2.jdk/Contents/Home/bin:/opt/homebrew/bin:/opt/homebrew/opt/node@20/bin:/Users/r00tdk/Documents/burpSuiteMac/jdk-15.0.2.jdk/Contents/Home/bin:/opt/homebrew/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/usr/local/munki:/Applications/kitty.app/Contents/MacOS::/Users/ddheeraj/tools/ripgrep/:/Users/ddheeraj/tools/ripgrep/
+export P4PORT="rsh:ssh -q -a -x -l p4ssh -q -x p4.source.akamai.com /bin/true"
+export P4USER=ddheeraj
+export P4EDITOR=vim
+#keychain --noask --eval /home/ddheeraj/.ssh/deployed/ddheeraj-deployed-2024-09-24
+#keychain --noask --eval /home/ddheeraj/.ssh/internal/ddheeraj-internal-2024-09-24
+alias sudoc="~/sudo_expect.sh"
+alias dsleep='sudo pmset -a disablesleep 1'
+alias esleep='sudo pmset -a disablesleep 0'
+alias kcamjenkins='ssh -A root@172.25.232.224'
+alias kquijenkins='ssh -A root@198.18.42.98'
+alias jserver='ssh -A root@198.18.88.234'
+alias njserver="sshpass -p YAPadmin ssh yap@172.25.148.254"
+##
+# Your previous /Users/ddheeraj/.bash_profile file was backed up as /Users/ddheeraj/.bash_profile.macports-saved_2024-11-14_at_23:30:45
+##
+# MacPorts Installer addition on 2024-11-14_at_23:30:45: adding an appropriate PATH variable for use with MacPorts.
+export PATH="/opt/local/bin:/opt/local/sbin:$PATH"
+# Finished adapting your PATH environment variable for use with MacPorts.
+export alsi1137="/Users/ddheeraj/Documents/code/alsi_code/projects/common/os-alsi11-11.37.0/akamai/os-alsi11/"
+export alsi228="/Users/ddheeraj/Documents/code/alsi_code/projects/common/os-alsi22-22.8/akamai/os-alsi22/"
+export alsi2211="/Users/ddheeraj/Documents/code/alsi_code/projects/common/os-alsi22-22.11/akamai/os-alsi22/"
+export lvmip="172.24.235.223"
+alias lvm="sshpass -p dkkr ssh $lvmip"
+export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"
+ljob() {
+  fullPath=`pwd`
+  curDir=`basename $fullPath`
+  if [ "$1" == "t" ]; then
+    temp_job="${curDir}_test"
+    jobName=$temp_job
+  elif [ "$1" == "c" ]; then
+    jobName=$curDir
+  elif [ "$1" == "n" ]; then
+    jobName="$3"
+  fi
+  java -jar  /Users/ddheeraj/Downloads/jenkins-cli.jar -s http://172.25.148.254:8080/ create-job $jobName < $2; }
+cpp()
+{
+  fullPath=`pwd`
+  curDir=`basename $fullPath`
+  echo "Current directory is $curDir"
+  tdir="/Users/ddheeraj/Documents/jenkinsJobsBackup/$curDir"
+  if [ ! -d "$tdir" ]; then
+    mkdir -p $tdir
+  fi
+  cp config.xml $tdir/config_previous.xml
+  cp config.xml $tdir/config_previous.xml_orig
+}
+# SSH-AGENT-START
+#if [[ $(ssh-add -l | grep 'no identities'| wc -l) -eq 1 ]]; then
+#    ssh-add ~/.ssh/internal/ddheeraj-internal-latest
+#    ssh-add ~/.ssh/internal/ddheeraj-internal-previous
+#    ssh-add ~/.ssh/deployed/ddheeraj-deployed-latest
+#    ssh-add ~/.ssh/deployed/ddheeraj-deployed-previous
+#    ssh-add ~/.ssh/linode/ddheeraj-linode-latest
+#    ssh-add ~/.ssh/linode/ddheeraj-linode-previous
+#fi
+# SSH-AGENT-END
+CONFIG22="/Users/ddheeraj/Documents/code/alsi_code/projects/kernel/regression/configs/pltest/kernelconfig.alsi22.ext4.ipv6"
+export PATH=/Users/ddheeraj/.pyenv/shims/:$PATH
+alias crows='ssh -R 7500 172.25.232.229'
+crow() { ssh -J ddheeraj@jumpbox-1.labkrk2.pl.stable.devcloud.linode.com root@h$1-labkrk2.devcloud.linode.com; }
+unset TMUX
+alias rasp='sshpass -p dkkr ssh dheeraj@192.168.0.151'
+ovc() { $@ && sleep 3; code . ;}
+#export ANTHROPIC_API_KEY=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
+#export ANTHROPIC_API_KEY=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
+alias clm='claude --model claude-sonnet-4-20250514'#claude-brocade-v24-p
+alias mm='ssh r00tdk@192.168.1.49'
+ct(){ mkdir $1; cd $1; touch $1 model_feedback; cd -; }
+alias vv='source .venv/bin/activate'
+
+# opencode
+export PATH=/Users/dheeraj/.opencode/bin:$PATH
+turing_git() {
+  if [ "$1" == "add" ]; then
+    if [ "$2" == "d" ]; then
+      ssh-add -D; ssh-add /Users/dheeraj/.ssh/dheeraj_kumar_turing; git config --local user.name "Dheeraj Kumar"; git config --local user.email "dheeraj.k2@turing.com";
+    elif [ "$2" == "g" ]; then
+      ssh-add -D; ssh-add /Users/dheeraj/.ssh/garis_turing; git config --local user.name "Garima Singh"; git config --local user.email "garima.s@turing.com";
+    else
+      echo "Run: turing_git add g or d";
+    fi
+  elif [ "$1" == "reset" ]; then
+    git commit --amend --reset-author --no-edit
+  else
+    echo "Run: turing_git add g or d || turing_git reset to edit the commited HEAD";
+  fi
+}
+tid() { echo "https://labeling-ms.turing.com/conversations/$1/view/details"; }
+
+# Added by Windsurf
+export PATH="/Users/dheeraj/.codeium/windsurf/bin:$PATH"
+
+merc_git() {
+  if [ "$1" == "add" ]; then
+    if [ "$2" == "dk" ]; then
+      ssh-add -D; ssh-add /Users/dheeraj/.ssh/id_ed25519; git config --local user.name "Dheeraj K"; git config --local user.email "dheeraj.embdeveloper@gmail.com";
+    elif [ "$2" == "kd" ]; then
+      ssh-add -D; ssh-add /Users/dheeraj/.ssh/dheeraj_prakash; git config --local user.name "Kakkar D"; git config --local user.email "dheerajk.kakkar@gmail.com";
+    elif [ "$2" == "neha" ]; then
+      ssh-add -D; ssh-add /Users/dheeraj/.ssh/nehaSharma; git config --local user.name "Neha Sharma"; git config --local user.email "nehaworkx01@gmail.com";
+    elif [ "$2" == "som" ]; then
+      ssh-add -D; ssh-add /Users/dheeraj/.ssh/somparkashdheeraj; git config --local user.name "Som Parkash"; git config --local user.email "somparkashdheeraj@gmail.com";
+    elif [ "$2" == "sharda" ]; then
+      ssh-add -D; ssh-add /Users/dheeraj/.ssh/sharda-k2; git config --local user.name "Sharda K"; git config --local user.email "shardakakkar2@gmail.com";
+    elif [ "$2" == "mahima" ]; then
+      ssh-add -D; ssh-add /Users/dheeraj/.ssh/pr-mahima; git config --local user.name "Mahima P"; git config --local user.email "mahima.pr01@gmail.com";
+    else
+      echo "Run: turing_git add (dk/kd/neha/som/sharda/mahima)";
+    fi
+  elif [ "$1" == "reset" ]; then
+    git commit --amend --reset-author --no-edit
+  else
+    echo "Run: turing_git add (dk/kd/neha/som/sharda/mahima) || turing_git reset to edit the commited HEAD";
+  fi
+}
+alias svenv='python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt'
+dockcp(){
+  if [ "$#" != "1" ]; then
+          retur
+  fi
+  docker cp task/problem_statement.md baseline-container-$1:/workspace/problem_statement.md && docker cp task/prompt_statement.md baseline-container-$1:/workspace/prompt_statement.md && docker cp task/interface.md baseline-container-$1:/workspace/interface.md && docker cp task/requirements.json baseline-container-$1:/workspace/requirements.json; 
+}
+psetup() {
+  if [ "$#" != "1" ]; then
+          return
+  fi
+  mkdir $1; cd $1
+  gh repo clone mercor-code-envs/agentic-bench-kehyj
+  cd agentic-bench-kehyj
+  svenv
+}
+turing_com() {
+  if [ "$1" == "d" ]; then
+    turing_git add d; mv solution_bf\ \(1\).cpp solution_bf.cpp ; git add *; git commit -m "Fixed bf code"; git push origin main;
+  elif [ "$1" == "g" ]; then
+    turing_git add g; mv solution_bf\ \(1\).cpp solution_bf.cpp ; git add *; git commit -m "BugFix: Fixed bf code"; git push origin main;
+  else
+    echo "Run: turing_com g or d";
+  fi
+}
