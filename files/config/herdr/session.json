@@ -1,0 +1,159 @@
+{
+  "version": 3,
+  "workspaces": [
+    {
+      "id": "wD",
+      "custom_name": null,
+      "identity_cwd": "/Users/dheeraj",
+      "public_pane_numbers": {
+        "19": 1,
+        "27": 9,
+        "24": 6,
+        "23": 5,
+        "30": 11,
+        "31": 12,
+        "26": 8,
+        "29": 10,
+        "25": 7
+      },
+      "next_public_pane_number": 13,
+      "public_tab_numbers": [
+        1,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "next_public_tab_number": 9,
+      "tabs": [
+        {
+          "custom_name": null,
+          "layout": {
+            "Split": {
+              "direction": "Horizontal",
+              "ratio": 0.5,
+              "first": {
+                "Pane": 19
+              },
+              "second": {
+                "Split": {
+                  "direction": "Vertical",
+                  "ratio": 0.5,
+                  "first": {
+                    "Pane": 26
+                  },
+                  "second": {
+                    "Pane": 27
+                  }
+                }
+              }
+            }
+          },
+          "panes": {
+            "19": {
+              "cwd": "/Users/dheeraj"
+            },
+            "26": {
+              "cwd": "/Users/dheeraj"
+            },
+            "27": {
+              "cwd": "/Users/dheeraj"
+            }
+          },
+          "zoomed": false,
+          "focused": 19,
+          "root_pane": 19
+        },
+        {
+          "custom_name": null,
+          "layout": {
+            "Split": {
+              "direction": "Horizontal",
+              "ratio": 0.5,
+              "first": {
+                "Pane": 23
+              },
+              "second": {
+                "Pane": 24
+              }
+            }
+          },
+          "panes": {
+            "23": {
+              "cwd": "/Users/dheeraj"
+            },
+            "24": {
+              "cwd": "/Users/dheeraj"
+            }
+          },
+          "zoomed": false,
+          "focused": 23,
+          "root_pane": 23
+        },
+        {
+          "custom_name": null,
+          "layout": {
+            "Pane": 25
+          },
+          "panes": {
+            "25": {
+              "cwd": "/Users/dheeraj"
+            }
+          },
+          "zoomed": false,
+          "focused": 25,
+          "root_pane": 25
+        },
+        {
+          "custom_name": null,
+          "layout": {
+            "Pane": 29
+          },
+          "panes": {
+            "29": {
+              "cwd": "/Users/dheeraj"
+            }
+          },
+          "zoomed": false,
+          "focused": 29,
+          "root_pane": 29
+        },
+        {
+          "custom_name": null,
+          "layout": {
+            "Pane": 30
+          },
+          "panes": {
+            "30": {
+              "cwd": "/Users/dheeraj"
+            }
+          },
+          "zoomed": false,
+          "focused": 30,
+          "root_pane": 30
+        },
+        {
+          "custom_name": null,
+          "layout": {
+            "Pane": 31
+          },
+          "panes": {
+            "31": {
+              "cwd": "/Users/dheeraj"
+            }
+          },
+          "zoomed": false,
+          "focused": 31,
+          "root_pane": 31
+        }
+      ],
+      "active_tab": 0
+    }
+  ],
+  "active": 0,
+  "selected": 0,
+  "sidebar_width": 26,
+  "sidebar_section_split": 0.4027778,
+  "collapsed_space_keys": []
+}

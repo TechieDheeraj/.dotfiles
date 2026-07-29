@@ -1,0 +1,64 @@
+# Terminal behavior migrated from ~/.config/kitty/kitty.conf on 2026-07-29.
+# cmux reads this file through libghostty.
+
+# Font
+font-size = 16
+font-feature = -calt, -liga, -dlig
+
+# Kitty used unlimited line-based scrollback. Ghostty uses a per-surface byte
+# limit and does not support unlimited scrollback, so use a generous 50 MB.
+scrollback-limit = 50000000
+scrollbar = never
+
+# Terminal spacing and split appearance
+# Preserve Kitty's zero terminal padding. Its separate one-point margin has no
+# cmux/Ghostty equivalent and is omitted to maximize usable terminal cells.
+window-padding-x = 0
+window-padding-y = 0
+window-decoration = auto
+
+# Keep pane focus visible without drawing a border over terminal cells.
+# Inactive panes receive a strong 40% black overlay; the active pane stays clear.
+unfocused-split-opacity = 0.60
+unfocused-split-fill = #000000
+
+# Shell
+command = /bin/bash
+shell-integration = detect
+
+# Kitty theme: ~/.config/kitty/current-theme.conf
+background = #000000
+foreground = #00a595
+cursor-color = #bbbbbb
+selection-background = #00a48c
+selection-foreground = #000000
+
+palette = 0=#000000
+palette = 1=#9f0000
+palette = 2=#008b00
+palette = 3=#ffcf00
+palette = 4=#0081ff
+palette = 5=#bc00ca
+palette = 6=#008b8b
+palette = 7=#bbbbbb
+palette = 8=#545454
+palette = 9=#ff0000
+palette = 10=#00ee00
+palette = 11=#ffff00
+palette = 12=#0000ff
+palette = 13=#ff00ff
+palette = 14=#00cdcd
+palette = 15=#ffffff
+
+# Preserve Kitty's pane-cycle bindings. The installed cmux Nightly cycles
+# through every pane in tree order and wraps at both ends.
+keybind = cmd+shift+;=goto_split:previous
+keybind = cmd+shift+'=goto_split:next
+
+# Preserve Kitty's shell word-navigation bindings.
+keybind = cmd+;=esc:b
+keybind = cmd+'=esc:f
+
+# Cmd-Shift-/ is handled by cmux's equalizeSplits shortcut. Kitty's
+# narrower/wider/shorter/taller actions are intentionally not approximated:
+# cmux Nightly exposes directional divider growth, not dimension-based resize.
