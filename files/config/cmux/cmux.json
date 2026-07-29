@@ -2,10 +2,9 @@
   "$schema": "https://raw.githubusercontent.com/manaflow-ai/cmux/main/web/data/cmux.schema.json",
   "schemaVersion": 1,
 
-  // Match cmux's blue selected-surface indicator. This colors the thin
-  // terminal tab-bar separators and horizontal/vertical pane dividers only;
-  // activePaneBorderColor stays unset so no outline covers terminal cells.
-  "paneBorderColor": "#007AFF",
+  // Muted slate terminal tab-bar separators and horizontal/vertical pane
+  // dividers. activePaneBorderColor stays unset so no outline covers cells.
+  "paneBorderColor": "#475569",
 
   // Migrated from ~/.config/kitty/kitty.conf on 2026-07-29.
   // Kitty tabs map most closely to cmux workspaces; Kitty windows map
