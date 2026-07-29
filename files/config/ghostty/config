@@ -22,14 +22,21 @@ window-decoration = auto
 unfocused-split-opacity = 0.60
 unfocused-split-fill = #000000
 
+# Match cmux's selected terminal-tab indicator for thin split dividers.
+split-divider-color = #007AFF
+
 # Shell
 command = /bin/bash
 shell-integration = detect
+# Keep Ghostty's cwd/prompt integration, but let Bash set a basename-only
+# terminal tab title instead of Ghostty publishing the full working path.
+shell-integration-features = no-title,no-cursor
 
 # Kitty theme: ~/.config/kitty/current-theme.conf
 background = #000000
 foreground = #00a595
 cursor-color = #bbbbbb
+cursor-style = block
 selection-background = #00a48c
 selection-foreground = #000000
 

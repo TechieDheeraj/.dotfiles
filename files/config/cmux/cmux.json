@@ -2,6 +2,11 @@
   "$schema": "https://raw.githubusercontent.com/manaflow-ai/cmux/main/web/data/cmux.schema.json",
   "schemaVersion": 1,
 
+  // Match cmux's blue selected-surface indicator. This colors the thin
+  // terminal tab-bar separators and horizontal/vertical pane dividers only;
+  // activePaneBorderColor stays unset so no outline covers terminal cells.
+  "paneBorderColor": "#007AFF",
+
   // Migrated from ~/.config/kitty/kitty.conf on 2026-07-29.
   // Kitty tabs map most closely to cmux workspaces; Kitty windows map
   // most closely to cmux panes.
@@ -18,7 +23,12 @@
   },
 
   "sidebarAppearance": {
-    "matchTerminalBackground": true
+    // Keep the workspace sidebar nearly black, but distinct from the terminal's
+    // pure #000000 background. cmux does not expose its sidebar hairline color.
+    "matchTerminalBackground": false,
+    "tintColor": "#101010",
+    "darkModeTintColor": "#101010",
+    "tintOpacity": 1.0
   },
 
   "automation": {
@@ -29,14 +39,18 @@
 
   "shortcuts": {
     "bindings": {
-      // Kitty tab-style workspace controls.
+      // Terminal tabs/surfaces inside the currently focused pane.
+      "prevSurface": "cmd+shift+p",
+      "nextSurface": "cmd+shift+n",
+
+      // Workspace navigation.
       "newTab": "cmd+shift+t",
-      "nextSidebarTab": "cmd+shift+n",
-      "prevSidebarTab": "cmd+shift+p",
+      "prevSidebarTab": "cmd+shift+[",
+      "nextSidebarTab": "cmd+shift+]",
       // cmux expands this to Cmd-1…9. In 0.64.20, 9 means "last";
       // there is no numbered workspace-10 action.
       "selectWorkspaceByNumber": "cmd+1",
-      "closeWorkspace": "cmd+shift+q",
+      "closeWorkspace": "cmd+shift+w",
 
       // Preserve access to cmux features displaced by the Kitty bindings.
       "newWindow": "cmd+opt+shift+n",
@@ -44,7 +58,9 @@
       "reopenClosedBrowserPanel": null,
 
       // Kitty window-style pane/surface controls.
-      "closeTab": "cmd+shift+w",
+      "closeTab": "cmd+w",
+      // Close the entire cmux application.
+      "quit": "cmd+q",
       "splitRight": "cmd+d",
       "splitDown": "cmd+shift+d",
       "toggleSplitZoom": "cmd+shift+return",
