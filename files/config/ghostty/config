@@ -5,9 +5,10 @@
 font-size = 16
 font-feature = -calt, -liga, -dlig
 
-# Kitty used unlimited line-based scrollback. Ghostty uses a per-surface byte
-# limit and does not support unlimited scrollback, so use a generous 50 MB.
-scrollback-limit = 50000000
+# Kitty uses unlimited line-based scrollback. Ghostty has no unlimited mode,
+# so use its maximum supported 32-bit byte limit (4 GiB per terminal surface).
+# Allocation is lazy and historical pages are compressed while idle.
+scrollback-limit = 4294967295
 scrollbar = never
 
 # Terminal spacing and split appearance

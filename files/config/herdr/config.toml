@@ -155,8 +155,9 @@ resume_agents_on_restore = true
 pane_history = true
 
 [advanced]
-# Herdr measures scrollback in bytes rather than tmux's history line count.
-scrollback_limit_bytes = 10000000
+# Herdr/Ghostty has no unlimited mode. Use a practical 4 GiB per-pane ceiling;
+# the terminal allocates scrollback lazily rather than reserving it up front.
+scrollback_limit_bytes = 4294967295
 
 # Not directly portable:
 # - tmux's global Ctrl+k clear-history has no Herdr clear-scrollback action.

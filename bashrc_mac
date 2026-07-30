@@ -9,55 +9,6 @@ case $- in
       *) return;;
 esac
 
-# A child `bash` inherits PROMPT_COMMAND from cmux/Ghostty, but shell
-# functions are not inherited with it. Remove only those stale hook names and
-# reinstall their integrations after this file has finished defining PS1.
-# The first cmux shell has a bootstrap marker and must be left alone.
-_cmux_remove_stale_prompt_hook() {
-    local _cmux_hook="$1"
-    local _cmux_pc="${PROMPT_COMMAND:-}"
-
-    if [ "$_cmux_pc" = "$_cmux_hook" ]; then
-        PROMPT_COMMAND=
-        return
-    fi
-
-    _cmux_pc="${_cmux_pc//;"$_cmux_hook";/;}"
-    _cmux_pc="${_cmux_pc/#"$_cmux_hook";/}"
-    _cmux_pc="${_cmux_pc/%;"$_cmux_hook"/}"
-    _cmux_pc="${_cmux_pc//$'\n'"$_cmux_hook"$'\n'/$'\n'}"
-    _cmux_pc="${_cmux_pc/#"$_cmux_hook"$'\n'/}"
-    _cmux_pc="${_cmux_pc/%$'\n'"$_cmux_hook"/}"
-    PROMPT_COMMAND="$_cmux_pc"
-}
-
-if [[ "${PROMPT_COMMAND:-}" != *"__cmux_bash_bootstrap_marker__"* ]]; then
-    if [[ "${PROMPT_COMMAND:-}" == *"_cmux_prompt_command"* ]] &&
-       ! declare -F _cmux_prompt_command >/dev/null 2>&1; then
-        _cmux_remove_stale_prompt_hook "_cmux_prompt_command"
-        _CMUX_REINSTALL_BASH_INTEGRATION=1
-    fi
-
-    if { [[ "${PROMPT_COMMAND:-}" == *"__bp_precmd_invoke_cmd"* ]] ||
-         [[ "${PROMPT_COMMAND:-}" == *"__bp_interactive_mode"* ]]; } &&
-       ! declare -F __bp_precmd_invoke_cmd >/dev/null 2>&1; then
-        _cmux_remove_stale_prompt_hook "__bp_precmd_invoke_cmd"
-        _cmux_remove_stale_prompt_hook "__bp_interactive_mode"
-        _CMUX_REINSTALL_GHOSTTY_BASH_INTEGRATION=1
-    fi
-
-    if [[ "${PROMPT_COMMAND:-}" == *"__bp_install"* ]] &&
-       ! declare -F __bp_install >/dev/null 2>&1; then
-        # bash-preexec's delayed installer is a three-line PROMPT_COMMAND
-        # fragment. A nested shell inherits the fragment but not its functions.
-        _cmux_remove_stale_prompt_hook '__bp_trap_string="$(trap -p DEBUG)"'
-        _cmux_remove_stale_prompt_hook "trap - DEBUG"
-        _cmux_remove_stale_prompt_hook "__bp_install"
-        _CMUX_REINSTALL_GHOSTTY_BASH_INTEGRATION=1
-    fi
-fi
-unset -f _cmux_remove_stale_prompt_hook
-
 # don't put duplicate lines or lines starting with space in the history.
 # See bash(1) for more options
 HISTCONTROL=ignoreboth
@@ -183,29 +134,8 @@ parse_git_branch() {
 
 source ~/.dotfiles/files/kube-ps1.sh
 
-# cmux's embedded Ghostty normally appends the full working path to the title
-# and changes the prompt cursor to a thin bar. Disable those features only
-# inside cmux so other terminals keep their original behavior.
-if [ -n "${CMUX_WORKSPACE_ID:-}" ]; then
-    _cmux_ghostty_features=",${GHOSTTY_SHELL_FEATURES:-},"
-    _cmux_ghostty_features="${_cmux_ghostty_features/,title,/,}"
-    _cmux_ghostty_features="${_cmux_ghostty_features/,no-title,/,}"
-    _cmux_ghostty_features="${_cmux_ghostty_features/,cursor,/,}"
-    _cmux_ghostty_features="${_cmux_ghostty_features/,no-cursor,/,}"
-    GHOSTTY_SHELL_FEATURES="${_cmux_ghostty_features#,}"
-    GHOSTTY_SHELL_FEATURES="${GHOSTTY_SHELL_FEATURES%,}"
-    export GHOSTTY_SHELL_FEATURES
-    unset _cmux_ghostty_features
-    # DECSCUSR 2 selects a steady block, including in already-open panes.
-    printf '\e[2 q'
-fi
-
-# Preserve the original prompt everywhere. Inside cmux only, prepend an
-# invisible title sequence that publishes the current directory's basename.
+# Preserve the original prompt in every terminal.
 PS1="\[\033[33m\][ \w ] \$(kube_ps1)\$ \[\033[01;36m\]\$(parse_git_branch)\[\033[01;31m\]\n>>> \[\033[00m\]"
-if [ -n "${CMUX_WORKSPACE_ID:-}" ]; then
-    PS1="\[\e]0;\W\a\]$PS1"
-fi
 export PS1
 #export PS1="\[\033[33m\][ \w ] \[\033[01;36m\]\$(parse_git_branch)\[\033[01;31m\]\n>>> \[\033[00m\]"
 export PATH=/opt/homebrew/bin:$PATH
@@ -613,17 +543,5 @@ export PATH="/Users/dheeraj/.local/bin:$PATH"
 export PATH=/Users/dheeraj/.druk/bin:$PATH
 alias hmp16='herdr --remote r00tdk@mp16 --remote-keybindings server'
 
-# Complete the nested-shell repair only after the user's prompt and the rest
-# of this startup file are ready.
-if [ "${_CMUX_REINSTALL_GHOSTTY_BASH_INTEGRATION:-0}" = "1" ]; then
-    _cmux_ghostty_bash="${GHOSTTY_RESOURCES_DIR:-}/shell-integration/bash/ghostty.bash"
-    [ -r "$_cmux_ghostty_bash" ] && source "$_cmux_ghostty_bash"
-fi
-if [ "${_CMUX_REINSTALL_BASH_INTEGRATION:-0}" = "1" ]; then
-    _cmux_bash_integration="${CMUX_SHELL_INTEGRATION_DIR:-}/cmux-bash-integration.bash"
-    [ -r "$_cmux_bash_integration" ] && source "$_cmux_bash_integration"
-fi
-unset _CMUX_REINSTALL_GHOSTTY_BASH_INTEGRATION
-unset _CMUX_REINSTALL_BASH_INTEGRATION
-unset _cmux_ghostty_bash
-unset _cmux_bash_integration
+# Keep cmux-only shell behavior out of the main Bash configuration.
+[ -r "$HOME/.config/cmux/cmux_bashrc.sh" ] && source "$HOME/.config/cmux/cmux_bashrc.sh"
