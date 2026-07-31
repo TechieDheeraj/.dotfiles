@@ -38,6 +38,7 @@ background = #000000
 foreground = #00a595
 cursor-color = #bbbbbb
 cursor-style = block
+cursor-style-blink = true
 selection-background = #00a48c
 selection-foreground = #000000
 

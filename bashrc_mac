@@ -545,3 +545,23 @@ alias hmp16='herdr --remote r00tdk@mp16 --remote-keybindings server'
 
 # Keep cmux-only shell behavior out of the main Bash configuration.
 [ -r "$HOME/.config/cmux/cmux_bashrc.sh" ] && source "$HOME/.config/cmux/cmux_bashrc.sh"
+
+# --- Force a block cursor inside cmux (Ghostty) ---------------------------
+# cmux writes the literal token "no-cursor" into GHOSTTY_SHELL_FEATURES, but
+# Ghostty's ghostty.bash (__ghostty_precmd) tests it with a *substring* match
+# `== *"cursor"*`, which also matches "no-cursor". That re-enables a blinking
+# bar (\e[5 q) on every prompt and overrides both cmux's one-shot \e[2 q and
+# `cursor-style = block` in ~/.config/ghostty/config. Strip only the cursor
+# token so no "cursor" substring survives; Ghostty then honors cursor-style =
+# block. The "no-title" token is intentionally left untouched.
+if [ -n "${CMUX_WORKSPACE_ID:-}" ] && [ -n "${GHOSTTY_SHELL_FEATURES:-}" ]; then
+    _cmux_gsf=",${GHOSTTY_SHELL_FEATURES},"
+    _cmux_gsf="${_cmux_gsf/,cursor:steady,/,}"
+    _cmux_gsf="${_cmux_gsf/,cursor,/,}"
+    _cmux_gsf="${_cmux_gsf/,no-cursor,/,}"
+    _cmux_gsf="${_cmux_gsf#,}"; _cmux_gsf="${_cmux_gsf%,}"
+    export GHOSTTY_SHELL_FEATURES="$_cmux_gsf"
+    unset _cmux_gsf
+    printf '\e[1 q'   # blinking block for the current pane, before the first prompt
+fi
+# --------------------------------------------------------------------------

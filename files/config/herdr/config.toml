@@ -52,6 +52,8 @@ split_vertical = ["prefix+v", "prefix+%"]
 split_horizontal = ["prefix+b", "prefix+minus", "prefix+\""]
 close_pane = "prefix+x"
 zoom = "prefix+z"
+onboarding = false
+rename_pane = ["prefix+.", "prefix+shift+p"]
 
 # prefix+r remains config reload as in tmux. Use prefix+R for Herdr's
 # persistent resize mode, then h/j/k/l repeatedly and Esc to exit.
