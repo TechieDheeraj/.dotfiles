@@ -1,3 +1,4 @@
+onboarding = false
 # Migrated from ~/.tmux.conf for Herdr 0.7.5.
 # Press ~, release it, then press the action key.
 # Press ~~ to send a literal ~ to the focused pane.
@@ -20,6 +21,8 @@ open_notification_target = "prefix+shift+o"
 # searchable workspace/tab/pane navigator.
 workspace_picker = "prefix+w"
 goto = "prefix+o"
+next_workspace = "prefix+;"
+previous_workspace = "prefix+'"
 
 # Tabs are the closest Herdr equivalent to tmux windows.
 # prefix+c creates immediately; prefix+C prompts for a name below.
@@ -45,7 +48,7 @@ swap_pane_up = "prefix+shift+k"
 swap_pane_right = "prefix+shift+l"
 cycle_pane_next = "prefix+tab"
 cycle_pane_previous = "prefix+shift+tab"
-last_pane = "prefix+;"
+last_pane = "prefix+/"
 
 # Keep both your custom split keys and the familiar tmux/Herdr defaults.
 split_vertical = ["prefix+v", "prefix+%"]
@@ -143,11 +146,12 @@ description = "send prefix to nested multiplexer"
 
 [ui]
 # Keep the user's existing Herdr preference.
-agent_panel_sort = "priority"
+agent_panel_sort = "spaces"
 
 # Match tmux: prefix+c creates immediately; prefix+C above asks for a name.
 prompt_new_tab_name = false
 
+show_agent_labels_on_pane_borders = true
 [session]
 # Replaces tmux-resurrect for supported coding-agent conversations.
 resume_agents_on_restore = true
@@ -166,3 +170,6 @@ scrollback_limit_bytes = 4294967295
 # - tmux status-bar commands/colors and tmux-cpu have no direct Herdr equivalent.
 # - resurrect/continuum save and restore keys are unnecessary because Herdr
 #   persists the session automatically; pane_history above retains recent output.
+
+[ui.toast]
+delivery = "system"
