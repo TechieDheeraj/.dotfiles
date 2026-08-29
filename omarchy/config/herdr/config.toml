@@ -1,0 +1,175 @@
+onboarding = false
+# Migrated from ~/.tmux.conf for Herdr 0.7.5.
+# Press ~, release it, then press the action key.
+# Press ~~ to send a literal ~ to the focused pane.
+
+[terminal]
+# New panes and tabs inherit the focused pane's working directory.
+new_cwd = "follow"
+
+[keys]
+prefix = "`"
+
+# tmux-style help, settings, detach, and config reload.
+help = "prefix+?"
+settings = "prefix+shift+s"
+detach = ["prefix+d", "prefix+q"]
+reload_config = "prefix+r"
+open_notification_target = "prefix+shift+o"
+
+# Navigation. prefix+o replaces the tmux pane-number prompt with Herdr's
+# searchable workspace/tab/pane navigator.
+workspace_picker = "prefix+w"
+goto = "prefix+o"
+next_workspace = "prefix+;"
+previous_workspace = "prefix+'"
+
+# Tabs are the closest Herdr equivalent to tmux windows.
+# prefix+c creates immediately; prefix+C prompts for a name below.
+new_tab = "prefix+c"
+rename_tab = ["prefix+comma", "prefix+shift+t"]
+previous_tab = "prefix+p"
+next_tab = "prefix+n"
+switch_tab = "prefix+1..9"
+close_tab = ["prefix+ampersand", "prefix+shift+x"]
+
+# tmux vi copy mode already uses v to select and y to copy in Herdr.
+copy_mode = "prefix+["
+edit_scrollback = "prefix+e"
+
+# Pane traversal and movement.
+focus_pane_left = "prefix+h"
+focus_pane_down = "prefix+j"
+focus_pane_up = "prefix+k"
+focus_pane_right = "prefix+l"
+swap_pane_left = "prefix+shift+h"
+swap_pane_down = "prefix+shift+j"
+swap_pane_up = "prefix+shift+k"
+swap_pane_right = "prefix+shift+l"
+cycle_pane_next = "prefix+tab"
+cycle_pane_previous = "prefix+shift+tab"
+last_pane = "prefix+/"
+
+# Keep both your custom split keys and the familiar tmux/Herdr defaults.
+split_vertical = ["prefix+v", "prefix+%"]
+split_horizontal = ["prefix+b", "prefix+minus", "prefix+\""]
+close_pane = "prefix+x"
+zoom = "prefix+z"
+#onboarding = false
+rename_pane = ["prefix+.", "prefix+shift+p"]
+
+# prefix+r remains config reload as in tmux. Use prefix+R for Herdr's
+# persistent resize mode, then h/j/k/l repeatedly and Esc to exit.
+resize_mode = "prefix+shift+r"
+
+# prefix+b is your horizontal split, so the Herdr sidebar moves to prefix+B.
+toggle_sidebar = "prefix+shift+b"
+
+# Emulate the tmux repeat-table resize bindings. Each press resizes by 5%.
+[[keys.command]]
+key = "prefix+ctrl+h"
+type = "shell"
+command = "\"$HERDR_BIN_PATH\" pane resize --pane \"$HERDR_ACTIVE_PANE_ID\" --direction left --amount 0.05"
+description = "resize pane left"
+
+[[keys.command]]
+key = "prefix+ctrl+j"
+type = "shell"
+command = "\"$HERDR_BIN_PATH\" pane resize --pane \"$HERDR_ACTIVE_PANE_ID\" --direction down --amount 0.05"
+description = "resize pane down"
+
+[[keys.command]]
+key = "prefix+ctrl+k"
+type = "shell"
+command = "\"$HERDR_BIN_PATH\" pane resize --pane \"$HERDR_ACTIVE_PANE_ID\" --direction up --amount 0.05"
+description = "resize pane up"
+
+[[keys.command]]
+key = "prefix+ctrl+l"
+type = "shell"
+command = "\"$HERDR_BIN_PATH\" pane resize --pane \"$HERDR_ACTIVE_PANE_ID\" --direction right --amount 0.05"
+description = "resize pane right"
+
+# tmux prefix+C: prompt for a named window (a named Herdr tab).
+[[keys.command]]
+key = "prefix+shift+c"
+type = "popup"
+command = '''
+printf 'Name of new tab: '
+IFS= read -r label
+if [ -n "$label" ]; then
+  "$HERDR_BIN_PATH" tab create --workspace "$HERDR_ACTIVE_WORKSPACE_ID" --label "$label" --focus
+fi
+'''
+description = "create named tab"
+width = 60
+height = 7
+
+# tmux prefix+g: choose a pane ID and bring it into the current tab.
+[[keys.command]]
+key = "prefix+g"
+type = "popup"
+command = '''
+"$HERDR_BIN_PATH" pane list
+printf '\nGet pane ID: '
+IFS= read -r pane_id
+if [ -n "$pane_id" ]; then
+  "$HERDR_BIN_PATH" pane move "$pane_id" --tab "$HERDR_ACTIVE_TAB_ID" --split right --target-pane "$HERDR_ACTIVE_PANE_ID" --focus
+fi
+'''
+description = "get pane into current tab"
+width = "90%"
+height = "80%"
+
+# tmux prefix+m: choose a tab ID and move the current pane into it.
+[[keys.command]]
+key = "prefix+m"
+type = "popup"
+command = '''
+"$HERDR_BIN_PATH" tab list
+printf '\nMove current pane to tab ID: '
+IFS= read -r tab_id
+if [ -n "$tab_id" ]; then
+  "$HERDR_BIN_PATH" pane move "$HERDR_ACTIVE_PANE_ID" --tab "$tab_id" --split right --focus
+fi
+'''
+description = "move pane to another tab"
+width = "90%"
+height = "80%"
+
+# Your alternate tmux send-prefix binding. (~~ is built in as well.)
+[[keys.command]]
+key = "prefix+a"
+type = "shell"
+command = "\"$HERDR_BIN_PATH\" pane send-text \"$HERDR_ACTIVE_PANE_ID\" \"~\""
+description = "send prefix to nested multiplexer"
+
+[ui]
+# Keep the user's existing Herdr preference.
+agent_panel_sort = "spaces"
+
+# Match tmux: prefix+c creates immediately; prefix+C above asks for a name.
+prompt_new_tab_name = false
+
+show_agent_labels_on_pane_borders = true
+[session]
+# Replaces tmux-resurrect for supported coding-agent conversations.
+resume_agents_on_restore = true
+
+[experimental]
+# Preserve recent pane screen history across full Herdr server restarts.
+pane_history = true
+
+[advanced]
+# Herdr/Ghostty has no unlimited mode. Use a practical 4 GiB per-pane ceiling;
+# the terminal allocates scrollback lazily rather than reserving it up front.
+scrollback_limit_bytes = 4294967295
+
+# Not directly portable:
+# - tmux's global Ctrl+k clear-history has no Herdr clear-scrollback action.
+# - tmux status-bar commands/colors and tmux-cpu have no direct Herdr equivalent.
+# - resurrect/continuum save and restore keys are unnecessary because Herdr
+#   persists the session automatically; pane_history above retains recent output.
+
+[ui.toast]
+delivery = "system"

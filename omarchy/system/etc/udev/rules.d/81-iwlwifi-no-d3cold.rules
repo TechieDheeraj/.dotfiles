@@ -1,0 +1,28 @@
+# Keep the Intel BE200 [8086:272b] out of D3cold so it survives s2idle.
+#
+# The card sits behind root port 0000:00:06.0, whose ACPI node \_SB_.PC00.RP10
+# declares _PR3 -- so the platform is allowed to cut power to the slot entirely.
+# On this laptop it does exactly that on suspend and then fails to restore it:
+#
+#   pcieport 0000:00:06.0: Data Link Layer Link Active not set in 100 msec
+#   iwlwifi 0000:01:00.0: 0xFFFFFFFF | ADVANCED_SYSASSERT
+#
+# Those all-ones registers are not a firmware crash. They are what you read from
+# a card that is no longer answering on the bus. iwlwifi cannot tell the
+# difference, so it retries the firmware load ~7 times and gives up, and the
+# NetworkManager wifi toggle does nothing but queue another doomed attempt.
+#
+# THE IMPORTANT PART: once it is gone, no software recovers it. Measured on this
+# machine -- a root-port rescan, a full /sys/bus/pci/rescan, and a secondary bus
+# reset on 00:06.0 all failed. Only a real power cycle brings it back. So this
+# rule prevents the transition; there is deliberately no recovery path, because
+# a recovery path would be a no-op that looks like a fix.
+#
+# Matched on vendor/device rather than PCI address so it still applies if the
+# card is ever re-seated or the bus renumbers.
+ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x8086", ATTR{device}=="0x272b", \
+  ATTR{d3cold_allowed}="0", ATTR{power/control}="on"
+
+# Keep the parent root port awake too. Bus 01 holds nothing else, so this costs
+# only the wifi card's link and not some unrelated device's runtime PM.
+ACTION=="add", SUBSYSTEM=="pci", KERNEL=="0000:00:06.0", ATTR{power/control}="on"

@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# battery-cap -- toggle Lenovo Conservation Mode on this Yoga/IdeaPad.
+#
+# Conservation Mode caps charging at roughly 55-60% and runs the laptop off AC.
+# That is the correct state for a machine that lives plugged in 24/7: lithium
+# cells age by calendar time as a function of state of charge, and sitting at
+# 100% at laptop temperatures is what actually destroys capacity.
+#
+# There is no adjustable percentage on this hardware -- the EC exposes on/off
+# only. See `battery-cap status` for the reasoning.
+#
+# Reboot always re-enables the cap (battery-conservation.service). So before a
+# trip: `battery-cap off`, let it charge to 100%, then unplug and go.
+
+set -euo pipefail
+
+ATTR=/sys/bus/platform/devices/VPC2004:00/conservation_mode
+BAT=/sys/class/power_supply/BAT1
+
+die() { echo "battery-cap: $*" >&2; exit 1; }
+
+[[ -e $ATTR ]] || die "conservation_mode not found -- is the ideapad_laptop module loaded?"
+
+write() {
+  if [[ -w $ATTR ]]; then
+    echo "$1" > "$ATTR"
+  else
+    # Falls back to sudo if the udev rule that grants the wheel group write
+    # access has not been installed or has not fired yet.
+    echo "$1" | sudo tee "$ATTR" > /dev/null
+  fi
+}
+
+case "${1:-status}" in
+  on|enable)
+    write 1
+    echo "Conservation mode ON  -- charging stops at ~60%, running from AC."
+    ;;
+  off|disable)
+    write 0
+    echo "Conservation mode OFF -- will charge to 100%. Re-enabled on next reboot."
+    ;;
+  status|"")
+    if [[ $(<"$ATTR") == 1 ]]; then
+      echo "Conservation mode: ON  (charge capped at ~60%)"
+    else
+      echo "Conservation mode: OFF (charges to 100%)"
+    fi
+    echo "AC connected:      $([[ $(</sys/class/power_supply/ACAD/online) == 1 ]] && echo yes || echo no)"
+    echo "Battery:           $(<"$BAT/capacity")%  ($(<"$BAT/status"))"
+    echo "Cycles:            $(<"$BAT/cycle_count")"
+    printf 'Health:            %.1f%% of design\n' \
+      "$(awk -v f="$(<"$BAT/energy_full")" -v d="$(<"$BAT/energy_full_design")" 'BEGIN{print f/d*100}')"
+    ;;
+  *)
+    echo "Usage: battery-cap [on|off|status]" >&2
+    exit 2
+    ;;
+esac

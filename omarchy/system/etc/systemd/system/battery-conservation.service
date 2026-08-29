@@ -1,0 +1,19 @@
+[Unit]
+Description=Enable Lenovo battery Conservation Mode (charge cap) for always-on operation
+Documentation=https://www.kernel.org/doc/html/latest/admin-guide/laptops/index.html
+
+# This laptop (Yoga Pro 7 14IAH10) exposes NO charge_control_start_threshold /
+# charge_control_end_threshold / charge_behaviour anywhere in sysfs, and its
+# /sys/class/firmware-attributes/ is empty. The ideapad_laptop driver's
+# conservation_mode is therefore the only firmware charge limiter that exists on
+# this machine. It is a fixed EC-controlled cap (~55-60%), not an adjustable
+# percentage -- there is no way to ask for 90%.
+ConditionPathExists=/sys/bus/platform/devices/VPC2004:00/conservation_mode
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/bash -c 'echo 1 > /sys/bus/platform/devices/VPC2004:00/conservation_mode'
+
+[Install]
+WantedBy=multi-user.target

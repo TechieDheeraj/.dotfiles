@@ -1,0 +1,13 @@
+# Let members of the "wheel" group flip Conservation Mode without sudo, so the
+# `battery-cap` helper can toggle it from a normal shell or over SSH.
+#
+# Deliberately ACTION=="add" only. A "change" rule that re-asserted the value
+# would fight the helper: writing the attribute makes the driver emit a uevent,
+# so the rule would immediately undo any `battery-cap off`.
+#
+# Setting the value at boot is battery-conservation.service's job, not udev's --
+# a systemd unit is ordered and observable (`systemctl status`), a udev RUN+= is
+# neither.
+ACTION=="add", SUBSYSTEM=="platform", KERNEL=="VPC2004:00", \
+  RUN+="/usr/bin/chgrp wheel /sys%p/conservation_mode", \
+  RUN+="/usr/bin/chmod 0664 /sys%p/conservation_mode"

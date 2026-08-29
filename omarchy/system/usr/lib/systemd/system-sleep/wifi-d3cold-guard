@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# Intel BE200 suspend guard -- re-assert before sleep, report after.
+#
+# WHY /usr/lib AND NOT /etc: systemd 261 scans only /usr/lib/systemd/system-sleep/.
+# A hook dropped in /etc/systemd/system-sleep/ is silently never executed -- no
+# warning, no log line, it simply does not run. Confirmed with:
+#     strings /usr/lib/systemd/systemd-sleep | grep system-sleep
+# This cost an evening once. Do not "tidy" this into /etc.
+#
+# The real fix is the udev rule (81-iwlwifi-no-d3cold.rules); this hook exists to
+# re-assert it right before sleeping in case something reset the attribute, and
+# -- mainly -- to leave a verdict in the journal so a regression is one command
+# away instead of an evening of log archaeology:
+#
+#     journalctl -t wifi-d3cold-guard -b 0
+#
+DEV=0000:01:00.0
+PORT=0000:00:06.0
+
+case "$1" in
+  pre)
+    for d in "$DEV" "$PORT"; do
+      [ -w "/sys/bus/pci/devices/$d/d3cold_allowed" ] && echo 0  > "/sys/bus/pci/devices/$d/d3cold_allowed"
+      [ -w "/sys/bus/pci/devices/$d/power/control" ]  && echo on > "/sys/bus/pci/devices/$d/power/control"
+    done
+    logger -t wifi-d3cold-guard "pre-$2: d3cold_allowed=$(cat /sys/bus/pci/devices/$DEV/d3cold_allowed 2>/dev/null || echo ?) state=$(cat /sys/bus/pci/devices/$DEV/power_state 2>/dev/null || echo absent)"
+    ;;
+  post)
+    # A rescan only ever succeeds after a genuine power cycle, never after the
+    # s2idle failure this guards against. It is here so that resuming from a
+    # forced power-off still ends with a working card, and so that a FAILED line
+    # below is unambiguous: it means the guard did not hold, not that we simply
+    # never looked.
+    if [ ! -e "/sys/bus/pci/devices/$DEV/vendor" ]; then
+      logger -t wifi-d3cold-guard "post-$2: card ABSENT, attempting rescan"
+      echo 1 > /sys/bus/pci/rescan
+      sleep 3
+    fi
+    if [ -e "/sys/bus/pci/devices/$DEV/vendor" ]; then
+      echo 0 > "/sys/bus/pci/devices/$DEV/d3cold_allowed" 2>/dev/null || true
+      modprobe iwlwifi 2>/dev/null || true
+      logger -t wifi-d3cold-guard "post-$2: OK state=$(cat /sys/bus/pci/devices/$DEV/power_state 2>/dev/null) iface=$(ls /sys/bus/pci/devices/$DEV/net 2>/dev/null | tr '\n' ' ')"
+    else
+      logger -t wifi-d3cold-guard "post-$2: FAILED - card ABSENT after rescan, D3cold guard did not hold"
+    fi
+    ;;
+esac
+exit 0
