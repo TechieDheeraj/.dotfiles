@@ -32,7 +32,7 @@ can keep improving the defaults underneath.
     bin/battery-cap          toggle the battery charge cap
     system/apply.sh          root-level setup (idempotent, has --revert)
     system/herdr-fork.sh     build + install herdr from your GitHub fork
-    system/tpm2-unlock.sh    optional: unattended reboot past the LUKS prompt
+    tpm/                     TPM2 auto-unlock for LUKS root -- see tpm/README.md
     system/wifi-be200-suspend-fix.sh
                              laptop-only: stop the BE200 wifi dying on resume
     system/etc/              the files apply.sh installs
@@ -45,8 +45,8 @@ can keep improving the defaults underneath.
     sudo pacman -S kitty                # 3. kitty is not installed by default
     omarchy-default-terminal kitty
     bash system/herdr-fork.sh           # 4. herdr from your fork (asks for sudo)
-    sudo bash system/tpm2-unlock.sh convert   # 5. optional, reboot between stages
-    sudo bash system/tpm2-unlock.sh enroll
+    sudo bash tpm/tpm2-unlock.sh convert      # 5. optional; see tpm/README.md
+    sudo bash tpm/tpm2-unlock.sh enroll       #    reboot between the two stages
 
 If this machine is a laptop you actually suspend, run the wifi fix **instead of**
 step 2 -- `apply.sh` masks `sleep.target`, so the two contradict each other:
@@ -208,7 +208,7 @@ temporary — use it to charge to 100% before taking the laptop out.
     bash install.sh                          # re-apply user level
     sudo bash system/apply.sh --revert
     omarchy-toggle-idle allow-idle
-    sudo bash system/tpm2-unlock.sh revert   # only if you ran tpm2-unlock.sh
+    sudo bash tpm/tpm2-unlock.sh revert      # only if you ran tpm2-unlock.sh
 
 To drop a ported binding, delete it from `config/hypr/bindings.lua` and run
 `hyprctl reload`. To go back to stock, point `~/.config/hypr/bindings.lua` at the

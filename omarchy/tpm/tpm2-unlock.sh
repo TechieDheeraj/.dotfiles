@@ -31,6 +31,22 @@
 # RUN THIS SITTING AT THE MACHINE, NOT OVER SSH, with an Arch/Omarchy USB stick
 # in your pocket. It rewrites how the machine boots. `revert` exists, but a
 # machine that will not boot cannot run `revert`.
+#
+# RESCUE FROM A LIVE USB -- this layout has FOUR btrfs subvolumes, and mounting
+# only @ leaves /home empty (that is where this script normally lives):
+#
+#   cryptsetup open /dev/nvme0n1p2 root
+#   mount -o subvol=@     /dev/mapper/root /mnt
+#   mount -o subvol=@home /dev/mapper/root /mnt/home
+#   mount -o subvol=@log  /dev/mapper/root /mnt/var/log
+#   mount -o subvol=@pkg  /dev/mapper/root /mnt/var/cache/pacman/pkg
+#   mount /dev/nvme0n1p1 /mnt/boot
+#   arch-chroot /mnt bash /root/pre-tpm2-backup/tpm2-unlock.sh revert
+#
+# To only rescue DATA, no chroot needed -- @home alone is enough:
+#   cryptsetup open /dev/nvme0n1p2 root
+#   mount -o subvol=@home /dev/mapper/root /mnt
+#   ls /mnt/dheeraj
 # ---------------------------------------------------------------------------
 
 set -euo pipefail
@@ -73,6 +89,10 @@ convert)
   # root-only storage. Copy it to offline media and delete it from here.
   cryptsetup luksHeaderBackup "$LUKS_PART" --header-backup-file "$BACKUP/luks-header.img"
   chmod 600 "$BACKUP/luks-header.img"
+  # This script lives in /home/dheeraj/.dotfiles, which is the SEPARATE @home
+  # subvolume. A rescue chroot that mounts only @ would not have it. Keep a copy
+  # beside the backups, inside @, so `revert` is reachable either way.
+  cp -a "${BASH_SOURCE[0]}" "$BACKUP/tpm2-unlock.sh"
   ls -la "$BACKUP"
   warn "Copy $BACKUP/luks-header.img to a USB stick and keep it offline."
 
@@ -206,17 +226,74 @@ NEXT
   ;;
 
 revert)
+  # Undoes BOTH stages: drops the TPM keyslot AND puts the busybox initramfs
+  # back. If you only want to stop the TPM unlocking the disk while KEEPING the
+  # systemd initramfs, you do not want this command -- run instead:
+  #     sudo systemd-cryptenroll /dev/nvme0n1p2 --wipe-slot=tpm2
+  # One command, nothing about the boot path changes, back to typing the
+  # passphrase. See the note printed at the end of this block.
+
+  step "Checking the backups this revert depends on"
+  # Verified BEFORE anything is touched. A half-finished revert leaves busybox
+  # hooks paired with a systemd cmdline: that still boots today off the existing
+  # UKI, then stops booting at the next kernel update, which is the worst
+  # possible way to discover it.
+  revert_blocked=0
+  for backup_file in default-limine kernel-cmdline; do
+    if [[ ! -f $BACKUP/$backup_file ]]; then
+      warn "missing: $BACKUP/$backup_file"
+      revert_blocked=1
+    elif ! grep -q 'cryptdevice=' "$BACKUP/$backup_file"; then
+      warn "no cryptdevice= line in: $BACKUP/$backup_file"
+      revert_blocked=1
+    else
+      echo "  ok  $BACKUP/$backup_file"
+    fi
+  done
+
+  if (( revert_blocked )); then
+    cat >&2 <<MANUAL
+
+Refusing to revert: the busybox cmdline cannot be restored from backup.
+Deleting the hooks drop-in without it would pair a busybox initramfs with a
+systemd cmdline and break booting at the next kernel update.
+
+Do it by hand instead. In BOTH /etc/default/limine and /etc/kernel/cmdline,
+replace the ${NEW_CRYPT} term with:
+
+  ${OLD_CRYPT}
+
+then:
+
+  rm -f ${HOOKS_DROPIN}
+  limine-mkinitcpio
+
+MANUAL
+    exit 1
+  fi
+
   step "Removing the TPM2 keyslot (passphrase keyslot untouched)"
   systemd-cryptenroll "$LUKS_PART" --wipe-slot=tpm2 2>/dev/null || echo "(no tpm2 slot to wipe)"
 
   step "Restoring initramfs hooks and cmdline"
   rm -fv "$HOOKS_DROPIN"
-  [[ -f $BACKUP/default-limine ]] && cp -av "$BACKUP/default-limine" /etc/default/limine
-  [[ -f $BACKUP/kernel-cmdline ]] && cp -av "$BACKUP/kernel-cmdline" /etc/kernel/cmdline
+  cp -av "$BACKUP/default-limine" /etc/default/limine
+  cp -av "$BACKUP/kernel-cmdline" /etc/kernel/cmdline
+
+  step "Confirming the cmdline is back to the busybox form"
+  # Runs before limine-mkinitcpio deliberately: if this fails, set -e stops here
+  # and the existing (working) UKI is left untouched rather than replaced by a
+  # mismatched one.
+  grep -H 'cryptdevice=' /etc/default/limine /etc/kernel/cmdline
 
   step "Rebuilding boot images"
   limine-mkinitcpio
-  echo "Reverted to passphrase-only boot. Reboot to confirm."
+
+  cat <<'DONE'
+
+Reverted to passphrase-only busybox boot. Reboot to confirm -- you should be
+asked for your passphrase again.
+DONE
   ;;
 
 *)
