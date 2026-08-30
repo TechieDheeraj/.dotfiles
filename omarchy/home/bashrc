@@ -1,0 +1,63 @@
+# Omarchy environment (OMARCHY_PATH + PATH), needed even for non-interactive shells
+[[ -r /usr/share/omarchy/default/bash/env-bootstrap ]] && source /usr/share/omarchy/default/bash/env-bootstrap
+
+# If not running interactively, don't do anything else (leave this above the rc source)
+[[ $- != *i* ]] && return
+
+# All the default Omarchy aliases and functions
+# (don't mess with these directly, just overwrite them here!)
+source "$OMARCHY_PATH/default/bash/rc"
+
+# Add your own exports, aliases, and functions here.
+#
+# Make an alias for invoking commands you use constantly
+# alias p='python'
+
+# --- personal bash config ---------------------------------------------------
+# Sourced LIVE from the dotfiles repo -- nothing is copied here, so any edit to
+# ~/.dotfiles/bashrc_mac takes effect in the next shell you open.
+if [[ -r "$HOME/.dotfiles/bashrc_mac" ]]; then
+  # bashrc_mac:454 is an absolute `export PATH=/Users/...` with no :$PATH on the
+  # end, so it REPLACES the PATH instead of extending it. On Linux that drops
+  # every mise install (claude, codex, node) and leaves only the handful of
+  # macOS dirs that happen to exist here -- which is why those commands vanished
+  # while /usr/bin ones kept working.
+  #
+  # That file is shared with the Mac, so it is guarded here rather than edited:
+  # keep its aliases and functions, then throw away the PATH it leaves behind.
+  # Nothing is lost -- every Linux-valid dir it adds is already in $PATH.
+  _linux_path=$PATH
+  source "$HOME/.dotfiles/bashrc_mac"
+  PATH=$_linux_path
+  unset _linux_path
+
+  # bashrc_mac:93 sets `alias ls='ls -G'`. On BSD ls, -G means colour; on GNU it
+  # means "hide the group column", so on Linux that silently kills colour AND
+  # drops a field. Correct for the Mac, wrong here -- override it after sourcing.
+  alias ls='ls --color=auto'
+
+  # There is no real vim on this box, only nvim -- so bashrc_mac's `alias
+  # vi='vim'` (:220) and `export EDITOR=vim` (:233) both point at a binary that
+  # does not exist. Alias fixes `vim` and, by re-expansion, `vi` too. EDITOR is
+  # NOT an alias though: git, crontab and sudoedit exec it straight off $PATH,
+  # so it needs the variable set as well or `git commit` fails.
+  if command -v nvim >/dev/null; then
+    alias vim='nvim'
+    export EDITOR=nvim
+    export P4EDITOR=nvim
+  fi
+
+  # Omarchy runs `eval "$(starship init bash)"` from default/bash/init, and
+  # starship_precmd rewrites PS1 via PROMPT_COMMAND before EVERY prompt -- so a
+  # plain PS1= assignment is overwritten before you ever see it.
+  #
+  # Surgically remove ONLY starship's hook. An exact-match test is not enough:
+  # kube-ps1 prepends its own, giving "_kube_ps1_prompt_update;starship_precmd",
+  # and that hook must survive or $(kube_ps1) in your PS1 stops updating.
+  if [[ ${PROMPT_COMMAND:-} == *starship_precmd* ]]; then
+    PROMPT_COMMAND=${PROMPT_COMMAND//starship_precmd/}
+    PROMPT_COMMAND=${PROMPT_COMMAND//;;/;}   # collapse the gap it left
+    PROMPT_COMMAND=${PROMPT_COMMAND#;}       # trim a leading separator
+    PROMPT_COMMAND=${PROMPT_COMMAND%;}       # and a trailing one
+  fi
+fi

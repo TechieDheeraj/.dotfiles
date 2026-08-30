@@ -20,6 +20,21 @@ link_config() {
   ln -sfnv "$src" "$target"
 }
 
+# Same, for dotfiles that live directly in $HOME rather than ~/.config.
+# ~/.bashrc is EXECUTED by every interactive shell, so a syntax error here
+# breaks every new terminal -- gate the link on `bash -n` before taking it live.
+link_home() {
+  local src="$1" target="$HOME/$2"
+  if [[ $src == *bashrc* ]] && ! bash -n "$src"; then
+    echo "REFUSING to link $src -- it does not parse" >&2
+    return 1
+  fi
+  if [[ -e $target && ! -L $target ]]; then
+    mv -v "$target" "$target.omarchy-default"
+  fi
+  ln -sfnv "$src" "$target"
+}
+
 step "Linking configs into ~/.config"
 for f in "$HERE"/config/hypr/*.lua; do
   link_config "$f" "hypr/$(basename "$f")"
@@ -74,40 +89,15 @@ else
   echo "sunshine not installed; run: sudo bash $HERE/system/sunshine-remote-desktop.sh"
 fi
 
-# ~/.bashrc is seeded from the omarchy-settings package and is NOT a file this
-# repo can symlink -- Omarchy's own bootstrap lines have to stay at the top. So
-# append a source block instead, once, idempotently.
-step "Wiring ~/.dotfiles/bashrc_mac into ~/.bashrc"
-if [[ ! -r $HOME/.dotfiles/bashrc_mac ]]; then
-  echo "~/.dotfiles/bashrc_mac not found; skipping"
-elif grep -q 'dotfiles/bashrc_mac' "$HOME/.bashrc" 2>/dev/null; then
-  echo "already wired"
-else
-  cat >> "$HOME/.bashrc" <<'BASHRC'
-
-# --- personal bash config ---------------------------------------------------
-# Sourced LIVE from the dotfiles repo -- nothing is copied here, so any edit to
-# ~/.dotfiles/bashrc_mac takes effect in the next shell you open.
-if [[ -r "$HOME/.dotfiles/bashrc_mac" ]]; then
-  source "$HOME/.dotfiles/bashrc_mac"
-
-  # Omarchy runs `eval "$(starship init bash)"` from default/bash/init, and
-  # starship_precmd rewrites PS1 via PROMPT_COMMAND before EVERY prompt -- so a
-  # plain PS1= assignment is overwritten before you ever see it.
-  #
-  # Surgically remove ONLY starship's hook. An exact-match test is not enough:
-  # kube-ps1 prepends its own, giving "_kube_ps1_prompt_update;starship_precmd",
-  # and that hook must survive or $(kube_ps1) in your PS1 stops updating.
-  if [[ ${PROMPT_COMMAND:-} == *starship_precmd* ]]; then
-    PROMPT_COMMAND=${PROMPT_COMMAND//starship_precmd/}
-    PROMPT_COMMAND=${PROMPT_COMMAND//;;/;}
-    PROMPT_COMMAND=${PROMPT_COMMAND#;}
-    PROMPT_COMMAND=${PROMPT_COMMAND%;}
-  fi
-fi
-BASHRC
-  echo "appended source block to ~/.bashrc"
-fi
+# ~/.bashrc is symlinked like everything else. /etc/skel/.bashrc is only a SEED
+# -- it is copied when a user account is created and never again, so a package
+# update to it cannot clobber this link. Omarchy's bootstrap lines live verbatim
+# at the top of home/bashrc, so nothing is lost by owning the whole file.
+#
+# It sources ~/.dotfiles/bashrc_mac for aliases/functions, but throws away the
+# PATH that file leaves behind -- see the comment in home/bashrc for why.
+step "Linking ~/.bashrc"
+link_home "$HERE/home/bashrc" ".bashrc"
 
 step "Linking helper scripts into ~/.local/bin"
 mkdir -p "$HOME/.local/bin"
