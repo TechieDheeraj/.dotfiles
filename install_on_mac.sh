@@ -6,6 +6,7 @@ echo -e "Installing tools \n"
 curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin
 brew install npm
 brew install cmake
+brew install terminal-notifier
 brew install tmux
 brew install rectangle
 brew install --cask scroll-reverser

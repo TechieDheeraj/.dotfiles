@@ -1,11 +1,21 @@
 #!/usr/bin/env bash
-# Build and install herdr from your fork, replacing Omarchy's packaged build.
+# Build and install herdr from your fork, replacing the distro-packaged build.
 #
 #   bash herdr-fork.sh              # do everything: update, build, install, clean up
 #   bash herdr-fork.sh status       # report only -- no clone, no build, no root
 #   bash herdr-fork.sh build        # update + build, stop before installing (keeps artifacts)
 #   bash herdr-fork.sh --force      # rebuild and reinstall even if nothing changed
 #   bash herdr-fork.sh --keep-build # install but KEEP artifacts, for fast iteration
+#
+# Runs on Linux (Arch/Omarchy) and macOS. Everything platform-specific is behind
+# the shim block below -- adding a third platform means filling in one more case
+# arm, not touching the logic.
+#
+# Environment overrides, all optional:
+#   HERDR_REPO         fork to build from
+#   HERDR_BRANCH       branch to track
+#   HERDR_INSTALL_DIR  where the binary lands (default: see pick_install_dir)
+#   HERDR_MACOS_SDK    macOS SDK to build against (default: see resolve_zig)
 #
 # BUILD ARTIFACTS ARE DELETED AFTER A SUCCESSFUL INSTALL. They are enormous --
 # 765 MB of the 819 MB tree, mostly vendor/libghostty-vt/.zig-cache at 413 MB --
@@ -21,19 +31,19 @@
 # commit, no tag, no remote write of any kind -- do your development on GitHub or
 # elsewhere and this just consumes whatever is on the branch.
 #
-# WHY NOT JUST `pacman -R herdr` AND DROP A BINARY IN:
-# that is what this does, but the ordering matters. /usr/local/bin precedes
-# /usr/bin in PATH here, so the fork wins even if the package comes back.
-# Removing the package is safe: `pacman -Qi herdr` reports "Required By: None"
+# WHY NOT JUST UNINSTALL THE PACKAGE AND DROP A BINARY IN:
+# that is what this does, but the ordering matters. On Arch /usr/local/bin
+# precedes /usr/bin, so the fork wins even if the package comes back, and
+# removing the package is safe: `pacman -Qi herdr` reports "Required By: None"
 # and it is only an *optional* dep of omarchy-settings, so omarchy-update will
-# not pull it back.
+# not pull it back. On macOS there is no single dir you can count on winning --
+# see pick_install_dir, which measures PATH instead of assuming.
 
 set -euo pipefail
 
-REPO=https://github.com/TechieDheeraj/herdr
-BRANCH=feat_health_check
+REPO=${HERDR_REPO:-https://github.com/TechieDheeraj/herdr}
+BRANCH=${HERDR_BRANCH:-feat_health_check}
 SRC="$HOME/.local/src/herdr-fork"
-DEST=/usr/local/bin/herdr
 BIN="$SRC/target/release/herdr"
 # Deliberately OUTSIDE target/: the cleanup below deletes target/, and a stamp
 # living in there would vanish with it, making every run look like a rebuild.
@@ -52,19 +62,219 @@ step() { printf '\n\033[1;36m==> %s\033[0m\n' "$*"; }
 info() { printf '    %-22s %s\n' "$1" "${2-}"; }
 die()  { printf '\033[1;31mxx  %s\033[0m\n' "$*" >&2; exit 1; }
 
+# --- install location -------------------------------------------------------
+# 1-based position of a directory in PATH, or 9999 if it is not on PATH at all.
+path_rank() {
+  local target=$1 i=0 dir
+  while IFS= read -r dir; do
+    i=$((i + 1))
+    [[ $dir == "$target" ]] && { echo "$i"; return; }
+  done <<< "${PATH//:/$'\n'}"
+  echo 9999
+}
+
+# Given candidate dirs, return whichever PATH actually prefers. The whole point
+# of this script is that the fork shadows every other herdr, and on macOS no
+# fixed directory guarantees that: Homebrew on Apple Silicon puts
+# /opt/homebrew/bin ahead of /usr/local/bin, and a ~/.local/bin ahead of both is
+# common. Guessing wrong installs a binary that something else quietly shadows,
+# which looks exactly like "the build did not pick up my commit". Measuring is
+# cheap and cannot be wrong. Falls back to the first candidate when none of them
+# are on PATH (the verify step warns in that case).
+pick_install_dir() {
+  local best=$1 best_rank c r
+  best_rank=$(path_rank "$1")
+  shift
+  for c in "$@"; do
+    r=$(path_rank "$c")
+    (( r < best_rank )) && { best=$c; best_rank=$r; }
+  done
+  printf '%s\n' "$best"
+}
+
+# --- platform shim ----------------------------------------------------------
+# The only place either OS is named. What differs: how you hash a file, how you
+# query and remove the packaged herdr, where the binary goes, and what to tell
+# someone missing a toolchain. Everything below this block is OS-agnostic.
+OS=$(uname -s)
+case $OS in
+  Darwin)
+    # BSD ships shasum; sha256sum is GNU coreutils and is not present.
+    sha256_of()     { shasum -a 256 "$1"; }
+    pkg_installed() { command -v brew >/dev/null 2>&1 && brew list --formula herdr >/dev/null 2>&1; }
+    pkg_remove()    { brew uninstall herdr; }
+    pkg_label()     { echo "brew herdr"; }
+    pkg_status()    { brew list --versions herdr 2>/dev/null || echo 'absent (correct)'; }
+    mise_hint="brew install mise"
+    # Three places a herdr can plausibly live on a Mac; PATH order decides which
+    # one we use. Listed with the most conservative first, which is also the
+    # fallback if none of them are on PATH.
+    DARWIN_CANDIDATES=(/usr/local/bin "$HOME/.local/bin")
+    command -v brew >/dev/null 2>&1 && DARWIN_CANDIDATES+=("$(brew --prefix)/bin")
+    INSTALL_DIR=$(pick_install_dir "${DARWIN_CANDIDATES[@]}")
+    ;;
+  Linux)
+    sha256_of()     { sha256sum "$1"; }
+    # Guarded on pacman existing so this degrades to a no-op on a non-Arch Linux
+    # instead of erroring out of a `set -e` script.
+    pkg_installed() { command -v pacman >/dev/null 2>&1 && pacman -Qq herdr >/dev/null 2>&1; }
+    pkg_remove()    { sudo pacman -R --noconfirm herdr; }
+    pkg_label()     { echo "pacman herdr"; }
+    pkg_status()    { pacman -Q herdr 2>/dev/null || echo 'removed (correct)'; }
+    mise_hint="curl https://mise.run | sh"
+    # Pinned rather than ranked: on Arch /usr/local/bin already beats /usr/bin,
+    # the reasoning in the header depends on that specific directory, and this
+    # path is the one that has actually been exercised. Set HERDR_INSTALL_DIR if
+    # your PATH puts something ahead of it.
+    INSTALL_DIR=/usr/local/bin
+    ;;
+  *) die "unsupported platform: $OS (expected Linux or Darwin)" ;;
+esac
+DEST="${HERDR_INSTALL_DIR:-$INSTALL_DIR}/herdr"
+
+# /usr/local/bin is root-owned on stock macOS and on Arch, but a Homebrew prefix
+# is owned by you -- in which case sudo is pure friction, and worse, it prompts
+# for a password it does not need.
+SUDO=sudo
+[[ -w ${DEST%/*} || ${EUID:-$(id -u)} -eq 0 ]] && SUDO=
+
 # --- toolchains -------------------------------------------------------------
 # Read from the tree rather than hardcoded, so a rebase that bumps either one
 # does not silently build with the wrong compiler. The vendored libghostty-vt is
 # Zig, compiled by build.rs shelling out to `zig`; without it the cargo build
-# panics inside build.rs instead of saying what it wanted. Arch ships a zig too
-# new for that vendored code, hence mise for both.
+# panics inside build.rs instead of saying what it wanted. Distro zig is usually
+# too new for that vendored code, hence mise for both.
 read_toolchains() {
   RUST=$(sed -nE 's/^[[:space:]]*channel[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' \
          "$SRC/rust-toolchain.toml" 2>/dev/null | head -1)
-  ZIG=$(sed -nE 's/.*minimum_zig_version[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' \
+  # Named ZIG_VERSION, not ZIG: build.rs reads a ZIG env var meaning the zig
+  # EXECUTABLE. Two different things, and colliding on the name is a trap.
+  ZIG_VERSION=$(sed -nE 's/.*minimum_zig_version[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' \
         "$SRC/vendor/libghostty-vt/build.zig.zon" 2>/dev/null | head -1)
   [[ -n ${RUST:-} ]] || die "could not read rust channel from rust-toolchain.toml"
-  [[ -n ${ZIG:-}  ]] || die "could not read minimum_zig_version from build.zig.zon"
+  [[ -n ${ZIG_VERSION:-} ]] || die "could not read minimum_zig_version from build.zig.zon"
+}
+
+# --- zig vs the macOS SDK ---------------------------------------------------
+# Zig 0.15.x cannot link against the macOS 26 (Tahoe) SDK on Apple Silicon. The
+# first document in that SDK's libSystem.B.tbd carries
+#   targets: [x86_64-macos, x86_64-maccatalyst, arm64e-macos, arm64e-maccatalyst]
+# with no plain arm64-macos slice, so an arm64 link resolves nothing and reports
+# EVERY libc symbol as undefined (_malloc, _abort, _fork, ...). It surfaces as
+# build.rs panicking with "zig build for vendored libghostty-vt failed".
+#
+# Bumping zig is NOT the fix, despite the field being called
+# minimum_zig_version: build.zig calls requireZig() which rejects anything
+# newer ("Your Zig version v0.16.0 does not meet the required build version of
+# v0.15.2"), and 0.16 changed Dir.readFileAlloc's signature so the vendored
+# build.zig no longer compiles there either. It is an exact pin in practice.
+#
+# The fix is to keep the pinned zig and hand it an older SDK that still ships
+# the arm64-macos slice -- CLT installs several side by side. Getting zig to USE
+# one is the fiddly part; three plausible levers do not work:
+#
+#   SDKROOT      ignored. zig asks `xcrun --sdk macosx --show-sdk-path`, and
+#                that form of xcrun does not honour SDKROOT.
+#   --sysroot    applies to the build's own compilations, NOT to the build
+#                runner zig links first, which is exactly what fails here. And
+#                build.rs execs zig with a fixed argv anyway (build.rs:63).
+#   ZIG_LIBC     changes include/crt paths, not the -syslibroot used for linking.
+#
+# What does work is intercepting the question rather than the answer: put an
+# `xcrun` earlier in PATH that reports the older SDK. zig then resolves that SDK
+# for everything it links, build runner included.
+#
+# NOTE this prefix is in effect for the whole cargo build, so the Rust link
+# steps see the older SDK too. That is the intended blast radius -- a binary
+# built against the 15.x SDK runs fine on 26 -- but it is why the shim is scoped
+# to the one build command and not exported globally.
+#
+# All Darwin-only and self-disarming: when a future zig or SDK links cleanly,
+# the first probe passes and nothing below it runs.
+SHIM_DIR="$(dirname "$SRC")/.herdr-sdk-shim"
+SHIM_PATH=""   # PATH prefix ("dir:") while a shim is in use, else empty
+
+# Lives outside $SRC deliberately: inside, it would show up as an untracked file
+# and trip the dirty-tree guard, and purge_artifacts would delete it.
+make_xcrun_shim() {
+  mkdir -p "$SHIM_DIR"
+  {
+    echo '#!/usr/bin/env bash'
+    echo '# Generated by herdr-fork.sh -- see "zig vs the macOS SDK" there.'
+    printf 'SDK=%q\n' "$1"
+    echo 'for a in "$@"; do'
+    echo '  case $a in'
+    echo '    --show-sdk-path)    printf "%s\n" "$SDK"; exit 0 ;;'
+    echo '    --show-sdk-version) basename "$SDK" | sed -E "s/^MacOSX(.*)\.sdk$/\1/"; exit 0 ;;'
+    echo '  esac'
+    echo 'done'
+    echo 'exec /usr/bin/xcrun "$@"'
+  } > "$SHIM_DIR/xcrun"
+  chmod +x "$SHIM_DIR/xcrun"
+  SHIM_PATH="$SHIM_DIR:"
+}
+
+# Can this zig link a trivial libc program? $2 optionally forces an SDK. The
+# probe deliberately mirrors how the real build invokes zig -- an earlier
+# version of this used --sysroot, passed, and the actual build still failed.
+zig_links_libc() {
+  local v=$1 sdk=${2-} tmp rc=0 prefix=""
+  tmp=$(mktemp -d) || return 1
+  printf 'const std = @import("std");\npub fn main() void { std.debug.print("", .{}); }\n' \
+    > "$tmp/probe.zig"
+  if [[ -n $sdk ]]; then make_xcrun_shim "$sdk"; prefix="$SHIM_DIR:"; fi
+  ( cd "$tmp" && PATH="$prefix$PATH" mise x "zig@$v" -- \
+      zig build-exe probe.zig -lc -femit-bin=probe ) >/dev/null 2>&1 || rc=1
+  rm -rf "$tmp"
+  return $rc
+}
+
+# Newest installed SDK the pinned zig can actually link against. Name-sorted
+# descending so we give up as little SDK as possible; the probe, not the name,
+# decides correctness.
+find_working_sdk() {
+  local d
+  for d in $(ls -d /Library/Developer/CommandLineTools/SDKs/MacOSX*.sdk \
+                   "$(xcode-select -p 2>/dev/null)"/Platforms/MacOSX.platform/Developer/SDKs/MacOSX*.sdk \
+                   2>/dev/null | sort -r); do
+    [[ -e $d/usr/lib/libSystem.B.tbd ]] || continue
+    if zig_links_libc "$ZIG_VERSION" "$d"; then printf '%s\n' "$d"; return 0; fi
+  done
+  return 1
+}
+
+resolve_zig() {
+  SHIM_PATH=""
+  [[ $OS == Darwin ]] || return 0   # Linux links against glibc; none of this applies
+
+  if [[ -n ${HERDR_MACOS_SDK:-} ]]; then
+    make_xcrun_shim "$HERDR_MACOS_SDK"
+    info "macos sdk" "$HERDR_MACOS_SDK (override)"
+    return 0
+  fi
+  if zig_links_libc "$ZIG_VERSION"; then
+    info "zig probe" "links libc against the default SDK"
+    return 0
+  fi
+  info "zig probe" "cannot link libc against $(/usr/bin/xcrun --show-sdk-path 2>/dev/null || echo 'the default SDK')"
+
+  local sdk
+  sdk=$(find_working_sdk) ||
+    die "zig $ZIG_VERSION cannot link against any installed macOS SDK.
+    Install an older one (Xcode CLT 15.x ships MacOSX15.sdk) or set
+    HERDR_MACOS_SDK to a usable SDK."
+  make_xcrun_shim "$sdk"
+  info "macos sdk" "$sdk  (default SDK lacks an arm64-macos slice)"
+}
+
+# Checked before the build rather than during it: cargo's failure mode for a
+# missing linker on macOS is a wall of ld errors that never mentions Xcode.
+check_prereqs() {
+  command -v git  >/dev/null 2>&1 || die "git not found"
+  command -v mise >/dev/null 2>&1 || die "mise not found -- install it with: $mise_hint"
+  if [[ $OS == Darwin ]] && ! xcode-select -p >/dev/null 2>&1; then
+    die "Xcode command line tools not installed -- run: xcode-select --install"
+  fi
 }
 
 # --- source -----------------------------------------------------------------
@@ -112,7 +322,8 @@ ensure_src() {
   HEAD_SHA=$(git -C "$SRC" rev-parse HEAD)
 }
 
-installed_sha() { [[ -x $DEST ]] && sha256sum "$DEST" | cut -c1-16 || echo "-"; }
+installed_sha() { [[ -x $DEST ]] && sha256_of "$DEST" | cut -c1-16 || echo "-"; }
+built_sha()     { [[ -x $BIN  ]] && sha256_of "$BIN"  | cut -c1-16 || echo "-"; }
 
 # Purge everything cargo and zig generate. Called only after a verified install,
 # and also on the "already current" path so a tree left dirty by an earlier run
@@ -129,35 +340,44 @@ purge_artifacts() {
   done
   info "tree size" "$before -> $(du -sh "$SRC" 2>/dev/null | cut -f1)  (source + .git kept)"
 }
-built_sha()     { [[ -x $BIN  ]] && sha256sum "$BIN"  | cut -c1-16 || echo "-"; }
+
+# BSD pgrep has no -a, so build the listing out of ps, which takes the same
+# -o pid=,command= on both platforms.
+running_herdr() {
+  pgrep -x herdr 2>/dev/null | while read -r p; do ps -p "$p" -o pid=,command=; done
+}
 
 # --- status -----------------------------------------------------------------
 if [[ $MODE == status ]]; then
   step "herdr fork status"
+  info "platform" "$OS ($(uname -m))"
   info "repo" "$REPO"
   info "branch" "$BRANCH"
   if [[ -d $SRC/.git ]]; then
     git -C "$SRC" fetch --depth 50 origin "$BRANCH" --quiet 2>/dev/null || true
     info "local HEAD" "$(git -C "$SRC" rev-parse --short HEAD) $(git -C "$SRC" log --format=%s -1)"
-    info "remote HEAD" "$(git -C "$SRC" rev-parse --short origin/$BRANCH 2>/dev/null || echo '?')"
+    info "remote HEAD" "$(git -C "$SRC" rev-parse --short "origin/$BRANCH" 2>/dev/null || echo '?')"
     info "installed from" "$(cut -c1-7 "$STAMP" 2>/dev/null || echo 'never')"
     info "artifacts" "$([[ -d $SRC/target ]] && echo "present ($(du -sh "$SRC" 2>/dev/null | cut -f1))" || echo "cleaned ($(du -sh "$SRC" 2>/dev/null | cut -f1))")"
   else
     info "source" "not cloned yet"
   fi
   info "built binary" "$([[ -x $BIN ]] && "$BIN" --version 2>&1 | head -1 || echo none) [$(built_sha)]"
+  info "install path" "$DEST"
   info "installed" "$([[ -x $DEST ]] && "$DEST" --version 2>&1 | head -1 || echo none) [$(installed_sha)]"
-  info "pacman herdr" "$(pacman -Q herdr 2>/dev/null || echo 'removed (correct)')"
+  info "$(pkg_label)" "$(pkg_status)"
   info "PATH resolves to" "$(command -v herdr || echo 'NOT FOUND')"
   exit 0
 fi
 
 # --- update + build ---------------------------------------------------------
 step "Fetching $REPO ($BRANCH)"
+info "platform" "$OS ($(uname -m))"
+check_prereqs
 ensure_src
 read_toolchains
 info "rust (from tree)" "$RUST"
-info "zig (from tree)" "$ZIG"
+info "zig (from tree)" "$ZIG_VERSION"
 
 # Nothing to do at all? Artifacts are deleted after install, so the question is
 # not "is there a built binary" but "is the INSTALLED one from this commit".
@@ -180,13 +400,25 @@ else
 fi
 
 if (( need_build )); then
-  step "Toolchains (mise, user-level -- no root, no pacman)"
-  mise install "rust@$RUST" "zig@$ZIG"
+  step "Toolchains (mise, user-level -- no root, no system package manager)"
+  # Deliberately down here rather than next to read_toolchains: probing costs a
+  # zig install, and a run that turns out to have nothing to build should not
+  # pay for it.
+  mise install "rust@$RUST" "zig@$ZIG_VERSION"
+  resolve_zig
 
   step "Building (release)"
-  ( cd "$SRC" && mise x "rust@$RUST" "zig@$ZIG" -- cargo build --release )
-  # Stamp only after cargo succeeds, so a failed build never looks current.
-  printf '%s\n' "$HEAD_SHA" > "$STAMP"
+  # SHIM_PATH is "<dir>:" when resolve_zig had to force an older SDK, empty
+  # otherwise. Scoped to this one command rather than exported, so nothing else
+  # in the session inherits a doctored xcrun.
+  ( cd "$SRC" && PATH="$SHIM_PATH$PATH" \
+      mise x "rust@$RUST" "zig@$ZIG_VERSION" -- cargo build --release )
+  # NOT stamped here. $STAMP means "the installed binary came from this commit",
+  # and a successful build has installed nothing. Stamping it here made `build`
+  # mode poison the next `install`: DEST exists (the OLD binary) and the stamp
+  # already matches HEAD, so the "Already current" check short-circuits, purges
+  # the artifacts and exits, leaving the old binary in place while reporting
+  # success. The only write is after the install below.
   info "built" "$("$BIN" --version 2>&1 | head -1)"
 fi
 
@@ -208,18 +440,29 @@ grep -qi '^config: ok' <<<"$config_out" ||
 # and can confuse a later reattach. Refuse rather than surprise you.
 if pgrep -x herdr >/dev/null 2>&1; then
   echo
-  pgrep -a herdr | sed 's/^/    /'
-  die "herdr is running -- close those sessions first, or re-run with --force"
+  running_herdr | sed 's/^/    /'
+  # --force has to actually bypass this, not just be mentioned in the error:
+  # the common case is running this script FROM a herdr session, where an
+  # absolute guard means you could never update at all.
+  if (( FORCE )); then
+    info "warning" "installing under live sessions (--force)"
+    info "" "they stay on the old inode until restarted; reattach may misbehave"
+  else
+    die "herdr is running -- close those sessions first, or re-run with --force"
+  fi
 fi
 
 step "Installing to $DEST"
-if pacman -Qq herdr >/dev/null 2>&1; then
+if pkg_installed; then
   echo "    removing the packaged herdr (it shadows nothing, but keep it tidy)"
-  sudo pacman -R --noconfirm herdr
+  pkg_remove
 else
-  info "pacman herdr" "already absent"
+  info "$(pkg_label)" "already absent"
 fi
-sudo install -Dm755 "$BIN" "$DEST"
+# Split out of a single `install -Dm755`: BSD install has no -D, and wants the
+# mode as a separate argument.
+$SUDO mkdir -p "${DEST%/*}"
+$SUDO install -m 755 "$BIN" "$DEST"
 
 # Stamped only after the binary is in place, so an aborted install never claims
 # to be current.
@@ -227,9 +470,14 @@ printf '%s\n' "$HEAD_SHA" > "$STAMP"
 
 step "Verifying"
 hash -r 2>/dev/null || true
-info "which herdr" "$(command -v herdr)"
-info "version" "$(herdr --version 2>&1 | head -1)"
-info "config" "$(herdr config check 2>&1 | head -1)"
+resolved=$(command -v herdr || echo 'NOT FOUND')
+info "which herdr" "$resolved"
+# Belt and braces against the PATH-ordering trap the INSTALL_DIR comment
+# describes: if something still shadows what we just wrote, say so out loud
+# rather than leave you wondering why --version disagrees with the commit.
+[[ $resolved == "$DEST" ]] || info "warning" "PATH prefers $resolved over $DEST"
+info "version" "$("$DEST" --version 2>&1 | head -1)"
+info "config" "$("$DEST" config check 2>&1 | head -1)"
 
 if (( KEEP )); then
   step "Keeping build artifacts (--keep-build)"
