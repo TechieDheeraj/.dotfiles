@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 # Build and install herdr from your fork, replacing the distro-packaged build.
 #
-#   bash herdr-fork.sh              # do everything: update, build, install, clean up
-#   bash herdr-fork.sh status       # report only -- no clone, no build, no root
-#   bash herdr-fork.sh build        # update + build, stop before installing (keeps artifacts)
-#   bash herdr-fork.sh --force      # rebuild and reinstall even if nothing changed
-#   bash herdr-fork.sh --keep-build # install but KEEP artifacts, for fast iteration
+#   bash herdr-fork.sh --help       # full usage; usage() below is the source of truth
+#
+# The comments in this file explain WHY things are the way they are; --help
+# explains HOW to drive it. Keep user-facing wording in usage(), not up here.
 #
 # Runs on Linux (Arch/Omarchy) and macOS. Everything platform-specific is behind
 # the shim block below -- adding a third platform means filling in one more case
@@ -55,12 +54,83 @@ ARTIFACTS=("$SRC/target" "$SRC/vendor/libghostty-vt/.zig-cache" "$SRC/vendor/lib
 MODE=${1:-install}
 FORCE=0
 KEEP=0
-[[ $MODE == --force ]]      && { FORCE=1; MODE=install; }
-[[ $MODE == --keep-build ]] && { KEEP=1;  MODE=install; }
+ALLOW_RUNNING=0
+HANDOFF=0
+HELP=0
+[[ $MODE == --help || $MODE == -h ]] && { HELP=1; MODE=install; }
+[[ $MODE == --force ]]         && { FORCE=1; MODE=install; }
+[[ $MODE == --keep-build ]]    && { KEEP=1;  MODE=install; }
+# Implies --allow-running: handing off is only meaningful when a server is up,
+# so refusing to install under live sessions would make the flag unusable.
+[[ $MODE == --handoff ]]       && { HANDOFF=1; ALLOW_RUNNING=1; MODE=install; }
+# Separate from --force on purpose: "install over live sessions" and "rebuild
+# even though nothing changed" are unrelated concerns, and folding them into one
+# flag means paying a full rebuild just to get past the guard.
+[[ $MODE == --allow-running ]] && { ALLOW_RUNNING=1; MODE=install; }
 
 step() { printf '\n\033[1;36m==> %s\033[0m\n' "$*"; }
 info() { printf '    %-22s %s\n' "$1" "${2-}"; }
 die()  { printf '\033[1;31mxx  %s\033[0m\n' "$*" >&2; exit 1; }
+
+# Called after the platform shim has resolved DEST, so the paths shown are the
+# ones this machine will actually use rather than a generic guess.
+usage() {
+  cat <<EOF
+herdr-fork.sh -- build and install herdr from your fork, replacing the
+distro-packaged build. Runs on Linux (Arch/Omarchy) and macOS.
+
+USAGE
+  bash herdr-fork.sh [command | flag]
+
+  Takes at most one argument. Anything unrecognised is an error rather than a
+  silent fall-through to a full install.
+
+COMMANDS
+  (none)             update, build if the branch moved, install, verify, clean up
+  status             report only -- no clone, no build, no root, no writes
+  build              update + build, then stop before installing (keeps artifacts)
+  --help, -h         this text
+
+FLAGS  (each runs the default install flow, with one behaviour changed)
+  --force            rebuild and reinstall even when nothing changed
+  --keep-build       install but KEEP build artifacts, for fast iteration
+  --allow-running    install while herdr sessions are live. They keep running
+                     the OLD binary until you restart them yourself
+  --handoff          install, then live-handoff the running server onto the new
+                     binary WITHOUT losing panes. Implies --allow-running, and
+                     still hands off when the binary is already up to date
+
+ENVIRONMENT
+  HERDR_REPO         fork to build from
+                       now: $REPO
+  HERDR_BRANCH       branch to track
+                       now: $BRANCH
+  HERDR_INSTALL_DIR  where the binary lands. Default is whichever of
+                     /usr/local/bin, ~/.local/bin or the Homebrew prefix your
+                     PATH prefers, so the fork always wins
+                       now: $DEST
+  HERDR_MACOS_SDK    macOS SDK to build against. Default probes for one the
+                     pinned zig can actually link (macOS only)
+
+PATHS
+  source             $SRC
+  install target     $DEST
+
+NOTES
+  Build artifacts are deleted after a successful install -- they are far larger
+  than the source and worthless once the binary is in place. Use --keep-build
+  while iterating. The source and .git stay, so the next run is just a fetch.
+
+  Handoff is SERVER-only. Clients and \`--remote\` wrappers keep executing their
+  original binary and go on drawing the old UI until restarted; the script lists
+  any it finds so a stale layout is not mistaken for a failed install.
+
+  Never run \`herdr update\` on a machine tracking this fork. It downloads the
+  official release and overwrites the fork build.
+
+  This script only ever FETCHES from the remote -- no push, commit or tag.
+EOF
+}
 
 # --- install location -------------------------------------------------------
 # 1-based position of a directory in PATH, or 9999 if it is not on PATH at all.
@@ -101,6 +171,9 @@ case $OS in
   Darwin)
     # BSD ships shasum; sha256sum is GNU coreutils and is not present.
     sha256_of()     { shasum -a 256 "$1"; }
+    # No /proc on macOS; lsof's "txt" row is the running executable image.
+    file_inode()     { stat -f %i "$1" 2>/dev/null; }
+    proc_exe_inode() { lsof -p "$1" 2>/dev/null | awk '$4=="txt" && $NF ~ /herdr$/ {print $(NF-1); exit}'; }
     pkg_installed() { command -v brew >/dev/null 2>&1 && brew list --formula herdr >/dev/null 2>&1; }
     pkg_remove()    { brew uninstall herdr; }
     pkg_label()     { echo "brew herdr"; }
@@ -115,6 +188,10 @@ case $OS in
     ;;
   Linux)
     sha256_of()     { sha256sum "$1"; }
+    # -L: /proc/PID/exe is a symlink to the image, which still resolves after
+    # the on-disk file has been replaced.
+    file_inode()     { stat -c %i "$1" 2>/dev/null; }
+    proc_exe_inode() { stat -Lc %i "/proc/$1/exe" 2>/dev/null; }
     # Guarded on pacman existing so this degrades to a no-op on a non-Arch Linux
     # instead of erroring out of a `set -e` script.
     pkg_installed() { command -v pacman >/dev/null 2>&1 && pacman -Qq herdr >/dev/null 2>&1; }
@@ -137,6 +214,19 @@ DEST="${HERDR_INSTALL_DIR:-$INSTALL_DIR}/herdr"
 # for a password it does not need.
 SUDO=sudo
 [[ -w ${DEST%/*} || ${EUID:-$(id -u)} -eq 0 ]] && SUDO=
+
+# Deferred to here so --help can print the paths this machine resolved.
+(( HELP )) && { usage; exit 0; }
+
+# Without this, a typo ("--foce", "--hand-off") fell through as an unrecognised
+# MODE and silently ran a full install -- the most destructive default possible
+# for a mistyped flag.
+case $MODE in
+  install|status|build) ;;
+  *) printf '\033[1;31mxx  unknown argument: %s\033[0m\n\n' "$MODE" >&2
+     usage >&2
+     exit 2 ;;
+esac
 
 # --- toolchains -------------------------------------------------------------
 # Read from the tree rather than hardcoded, so a rebase that bumps either one
@@ -347,6 +437,72 @@ running_herdr() {
   pgrep -x herdr 2>/dev/null | while read -r p; do ps -p "$p" -o pid=,command=; done
 }
 
+# --- live handoff -----------------------------------------------------------
+# The server can re-exec a replacement binary in place and carry the panes
+# across, which is what `herdr update --handoff` does internally -- minus the
+# download, which would replace this fork with an official release and is the
+# reason `herdr update` must never be run on a machine tracking the fork.
+#
+# `herdr server live-handoff` is not in `herdr --help`, but it is a first-class
+# command (src/cli/server.rs). It deliberately skips the CLI's protocol
+# compatibility guard, because a handoff is itself the recovery path for a
+# protocol mismatch -- which is exactly the situation here, where the running
+# server is older than the binary we just installed.
+#
+# HANDOFF IS SERVER-ONLY. Clients and `--remote` wrappers keep executing their
+# original inode and go on drawing the OLD UI until they are restarted. That
+# looks indistinguishable from a failed install, so stale_pids names them.
+
+# PIDs whose running image is not the binary we just installed.
+stale_pids() {
+  local want p ino
+  want=$(file_inode "$DEST") || return 0
+  [[ -n $want ]] || return 0
+  for p in $(pgrep -x herdr 2>/dev/null); do
+    ino=$(proc_exe_inode "$p") || continue
+    [[ -n $ino && $ino != "$want" ]] && printf '%s\n' "$p"
+  done
+  return 0
+}
+
+live_handoff() {
+  if ! pgrep -x herdr >/dev/null 2>&1; then
+    info "handoff" "no herdr running -- nothing to hand off"
+    return 0
+  fi
+  # Ask the NEW binary what protocol it speaks, so the server can verify the
+  # replacement actually came up as expected instead of trusting the swap.
+  local proto args=(--import-exe "$DEST") out
+  proto=$("$DEST" api schema --json 2>/dev/null |
+          sed -nE 's/.*"protocol"[[:space:]]*:[[:space:]]*([0-9]+).*/\1/p' | head -1)
+  if [[ -n $proto ]]; then
+    args+=(--expected-protocol "$proto")
+    info "expecting protocol" "$proto"
+  else
+    info "warning" "could not read protocol from the new binary -- handing off unverified"
+  fi
+
+  if out=$("$DEST" server live-handoff "${args[@]}" 2>&1); then
+    printf '    %s\n' "$out"
+    info "server now" "$("$DEST" status server 2>&1 | sed -n 's/^version: //p')"
+  else
+    printf '    %s\n' "$out"
+    # Not fatal: a refused handoff leaves the OLD server running with your
+    # panes intact, which is the safe outcome. The new binary is installed
+    # either way, so a plain restart still picks it up.
+    info "handoff" "FAILED -- old server kept running, panes intact"
+    info "" "restart herdr when convenient to pick up the new binary"
+    return 0
+  fi
+
+  local stale
+  stale=$(stale_pids)
+  if [[ -n $stale ]]; then
+    info "still on old binary" "these did not hand off and need a restart:"
+    echo "$stale" | while read -r p; do ps -p "$p" -o pid=,command= | sed 's/^/      /'; done
+  fi
+}
+
 # --- status -----------------------------------------------------------------
 if [[ $MODE == status ]]; then
   step "herdr fork status"
@@ -386,6 +542,14 @@ if [[ $MODE == install ]] && (( ! FORCE )) &&
   step "Already current"
   info "installed" "$("$DEST" --version 2>&1 | head -1)"
   info "from commit" "$(echo "$HEAD_SHA" | cut -c1-7)"
+  # "Already current" is about the binary ON DISK, which says nothing about what
+  # the RUNNING processes are executing -- install without handoff leaves the
+  # server on its old inode. So --handoff still has work to do here, and this is
+  # in fact its most common use: hand off after an earlier plain install.
+  if (( HANDOFF )); then
+    step "Handing off live sessions to the new binary"
+    live_handoff
+  fi
   (( KEEP )) || purge_artifacts
   exit 0
 fi
@@ -444,11 +608,15 @@ if pgrep -x herdr >/dev/null 2>&1; then
   # --force has to actually bypass this, not just be mentioned in the error:
   # the common case is running this script FROM a herdr session, where an
   # absolute guard means you could never update at all.
-  if (( FORCE )); then
-    info "warning" "installing under live sessions (--force)"
-    info "" "they stay on the old inode until restarted; reattach may misbehave"
+  if (( FORCE || ALLOW_RUNNING )); then
+    (( HANDOFF )) || {
+      info "warning" "installing under live sessions"
+      info "" "they stay on the old inode until restarted"
+      info "" "re-run with --handoff to move the server across without losing panes"
+    }
   else
-    die "herdr is running -- close those sessions first, or re-run with --force"
+    die "herdr is running -- close those sessions first, re-run with --handoff to
+    keep your panes, or --allow-running to install and restart manually"
   fi
 fi
 
@@ -478,6 +646,13 @@ info "which herdr" "$resolved"
 [[ $resolved == "$DEST" ]] || info "warning" "PATH prefers $resolved over $DEST"
 info "version" "$("$DEST" --version 2>&1 | head -1)"
 info "config" "$("$DEST" config check 2>&1 | head -1)"
+
+# After the install and verify, so a handoff never points a live server at a
+# binary that failed its own config check.
+if (( HANDOFF )); then
+  step "Handing off live sessions to the new binary"
+  live_handoff
+fi
 
 if (( KEEP )); then
   step "Keeping build artifacts (--keep-build)"
