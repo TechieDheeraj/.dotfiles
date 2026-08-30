@@ -21,6 +21,7 @@ step() { printf '\n\033[1;36m==> %s\033[0m\n' "$*"; }
 if [[ ${1:-} == --revert ]]; then
   step "Reverting"
   rm -fv /etc/systemd/logind.conf.d/50-always-on-server.conf
+  rm -fv /etc/systemd/sleep.conf.d/50-hibernate-mode.conf
   rm -fv /etc/udev/rules.d/99-lenovo-battery-conservation.rules
   systemctl disable --now battery-conservation.service 2>/dev/null || true
   rm -fv /etc/systemd/system/battery-conservation.service
@@ -42,31 +43,63 @@ install -Dm644 "$HERE/etc/systemd/logind.conf.d/50-always-on-server.conf" \
                /etc/systemd/logind.conf.d/50-always-on-server.conf
 systemctl reload systemd-logind || systemctl restart systemd-logind
 
+# Hibernate by plain power-off rather than ACPI S4. Must live here: systemd
+# writes /sys/power/disk itself from HibernateMode= just before hibernating, so
+# setting that file directly is discarded. See the drop-in for the measurements.
+install -Dm644 "$HERE/etc/systemd/sleep.conf.d/50-hibernate-mode.conf" \
+               /etc/systemd/sleep.conf.d/50-hibernate-mode.conf
+
 # 2 ----------------------------------------------------------------------------
-# Belt and braces. Step 1 covers every automatic path into sleep, but masking the
-# targets makes suspend structurally impossible -- an accidental click in the
-# Omarchy power menu, a stray `systemctl suspend`, or some future package's
-# inhibitor logic simply cannot put this machine to sleep.
+# OPT-IN, and OFF by default.
 #
-# Cost: you also lose deliberate suspend/hibernate. That is the intended trade
-# for a server. `--revert` unmasks them.
-step "Masking sleep/suspend/hibernate targets"
-systemctl mask "${SLEEP_TARGETS[@]}"
+# Step 1 already closes every AUTOMATIC path into sleep: the lid, the idle timer
+# and the power/sleep keys are all "ignore", so nothing puts this machine to
+# sleep by itself. Masking goes further and makes sleep structurally impossible
+# -- but it also blocks DELIBERATE `systemctl suspend` / `systemctl hibernate`
+# and the Omarchy power menu, which is a capability worth keeping on a laptop
+# that is still occasionally a laptop.
+#
+# The masked state was the original default here and is why `systemctl hibernate`
+# answered "Access denied". For the stricter posture:
+#     sudo MASK_SLEEP=1 bash apply.sh
+if [[ ${MASK_SLEEP:-0} == 1 ]]; then
+  step "Masking sleep/suspend/hibernate targets (MASK_SLEEP=1)"
+  systemctl mask "${SLEEP_TARGETS[@]}"
+else
+  step "Unmasking sleep targets (deliberate suspend/hibernate stay available)"
+  # Only unmask what is masked, so this is quiet on a clean system.
+  # if/fi purely for readability; `[[ ... ]] && cmd` would also be safe here
+  # (bash exempts the left side of a && list from set -e).
+  for t in "${SLEEP_TARGETS[@]}"; do
+    if [[ $(systemctl is-enabled "$t" 2>/dev/null) == masked ]]; then
+      systemctl unmask "$t"
+    fi
+  done
+  echo "  automatic sleep is still blocked by the logind drop-in above"
+fi
 
 # 3 ----------------------------------------------------------------------------
 # Battery. See battery-conservation.service for why this is on/off and not 90%.
-step "Enabling Lenovo Conservation Mode (charge cap ~60%) persistently"
+step "Enabling Lenovo Conservation Mode (charge cap ~80%) persistently"
 install -Dm644 "$HERE/etc/systemd/system/battery-conservation.service" \
                /etc/systemd/system/battery-conservation.service
 install -Dm644 "$HERE/etc/udev/rules.d/99-lenovo-battery-conservation.rules" \
                /etc/udev/rules.d/99-lenovo-battery-conservation.rules
 systemctl daemon-reload
-systemctl enable --now battery-conservation.service
+systemctl enable battery-conservation.service
+# restart, not `enable --now`: the unit is Type=oneshot RemainAfterExit=yes, so
+# once it is active `--now` is a no-op and an edited ExecStart would never run.
+systemctl restart battery-conservation.service
 
 # Apply the udev permission bits now, without waiting for a reboot.
 udevadm control --reload
-chgrp wheel /sys/bus/platform/devices/VPC2004:00/conservation_mode
-chmod 0664  /sys/bus/platform/devices/VPC2004:00/conservation_mode
+for attr in conservation_mode usb_charging; do
+  a=/sys/bus/platform/devices/VPC2004:00/$attr
+  if [[ -e $a ]]; then
+    chgrp wheel "$a"
+    chmod 0664  "$a"
+  fi
+done
 
 # 4 ----------------------------------------------------------------------------
 step "Verifying"
@@ -75,7 +108,10 @@ printf '%-34s %s\n' "HandleLidSwitch:" \
 printf '%-34s %s\n' "IdleAction:" \
   "$(busctl get-property org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager IdleAction | awk '{print $2}')"
 printf '%-34s %s\n' "sleep.target:" "$(systemctl is-enabled sleep.target 2>&1)"
+printf '%-34s %s\n' "hibernate.target:" "$(systemctl is-enabled hibernate.target 2>&1)"
 printf '%-34s %s\n' "conservation_mode:" "$(cat /sys/bus/platform/devices/VPC2004:00/conservation_mode)"
+printf '%-34s %s\n' "usb_charging:" "$(cat /sys/bus/platform/devices/VPC2004:00/usb_charging 2>/dev/null || echo n/a)"
+printf '%-34s %s\n' "HibernateMode:" "$(systemd-analyze cat-config systemd/sleep.conf 2>/dev/null | awk -F= '/^HibernateMode=/{print $2}' | tail -1)"
 printf '%-34s %s\n' "conservation_mode perms:" "$(stat -c '%U:%G %a' /sys/bus/platform/devices/VPC2004:00/conservation_mode)"
 
 cat <<'DONE'

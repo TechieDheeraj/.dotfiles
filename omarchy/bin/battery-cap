@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # battery-cap -- toggle Lenovo Conservation Mode on this Yoga/IdeaPad.
 #
-# Conservation Mode caps charging at roughly 55-60% and runs the laptop off AC.
+# Conservation Mode caps charging and runs the laptop off AC. MEASURED ON THIS
+# MACHINE: the cap is ~80%, not the ~55-60% commonly quoted for older IdeaPads --
+# observed holding at 80% with status "Not charging" and conservation_mode=1.
 # That is the correct state for a machine that lives plugged in 24/7: lithium
 # cells age by calendar time as a function of state of charge, and sitting at
 # 100% at laptop temperatures is what actually destroys capacity.
@@ -15,6 +17,7 @@
 set -euo pipefail
 
 ATTR=/sys/bus/platform/devices/VPC2004:00/conservation_mode
+USBATTR=/sys/bus/platform/devices/VPC2004:00/usb_charging
 BAT=/sys/class/power_supply/BAT1
 
 die() { echo "battery-cap: $*" >&2; exit 1; }
@@ -22,30 +25,42 @@ die() { echo "battery-cap: $*" >&2; exit 1; }
 [[ -e $ATTR ]] || die "conservation_mode not found -- is the ideapad_laptop module loaded?"
 
 write() {
-  if [[ -w $ATTR ]]; then
-    echo "$1" > "$ATTR"
+  local target=${2:-$ATTR}
+  if [[ -w $target ]]; then
+    echo "$1" > "$target"
   else
     # Falls back to sudo if the udev rule that grants the wheel group write
     # access has not been installed or has not fired yet.
-    echo "$1" | sudo tee "$ATTR" > /dev/null
+    echo "$1" | sudo tee "$target" > /dev/null
   fi
 }
 
 case "${1:-status}" in
   on|enable)
     write 1
-    echo "Conservation mode ON  -- charging stops at ~60%, running from AC."
+    echo "Conservation mode ON  -- charging stops at ~80%, running from AC."
     ;;
   off|disable)
     write 0
     echo "Conservation mode OFF -- will charge to 100%. Re-enabled on next reboot."
     ;;
+  usb)
+    # Lenovo "always-on USB charging" keeps the port rails powered through
+    # shutdown, suspend and hibernate. Off by default here because measured S4
+    # standby draw was 2.82 W, ~9x typical. Turn it on to charge from a closed lid.
+    case "${2:-status}" in
+      on|enable)   write 1 "$USBATTR"; echo "Always-on USB charging ON  (draws power while the laptop is off)" ;;
+      off|disable) write 0 "$USBATTR"; echo "Always-on USB charging OFF (re-applied on every boot)" ;;
+      *)           echo "Always-on USB charging: $([[ $(<"$USBATTR") == 1 ]] && echo ON || echo OFF)" ;;
+    esac
+    ;;
   status|"")
     if [[ $(<"$ATTR") == 1 ]]; then
-      echo "Conservation mode: ON  (charge capped at ~60%)"
+      echo "Conservation mode: ON  (charge capped at ~80%)"
     else
       echo "Conservation mode: OFF (charges to 100%)"
     fi
+    echo "Always-on USB:     $([[ $(<"$USBATTR") == 1 ]] && echo ON || echo OFF)"
     echo "AC connected:      $([[ $(</sys/class/power_supply/ACAD/online) == 1 ]] && echo yes || echo no)"
     echo "Battery:           $(<"$BAT/capacity")%  ($(<"$BAT/status"))"
     echo "Cycles:            $(<"$BAT/cycle_count")"
@@ -53,7 +68,7 @@ case "${1:-status}" in
       "$(awk -v f="$(<"$BAT/energy_full")" -v d="$(<"$BAT/energy_full_design")" 'BEGIN{print f/d*100}')"
     ;;
   *)
-    echo "Usage: battery-cap [on|off|status]" >&2
+    echo "Usage: battery-cap [on|off|status|usb [on|off|status]]" >&2
     exit 2
     ;;
 esac

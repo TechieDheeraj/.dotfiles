@@ -10,4 +10,6 @@
 # neither.
 ACTION=="add", SUBSYSTEM=="platform", KERNEL=="VPC2004:00", \
   RUN+="/usr/bin/chgrp wheel /sys%p/conservation_mode", \
-  RUN+="/usr/bin/chmod 0664 /sys%p/conservation_mode"
+  RUN+="/usr/bin/chmod 0664 /sys%p/conservation_mode", \
+  RUN+="/usr/bin/chgrp wheel /sys%p/usb_charging", \
+  RUN+="/usr/bin/chmod 0664 /sys%p/usb_charging"

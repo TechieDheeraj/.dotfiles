@@ -1,19 +1,29 @@
 [Unit]
-Description=Enable Lenovo battery Conservation Mode (charge cap) for always-on operation
+Description=Lenovo EC battery settings: charge cap on, always-on USB charging off
 Documentation=https://www.kernel.org/doc/html/latest/admin-guide/laptops/index.html
 
-# This laptop (Yoga Pro 7 14IAH10) exposes NO charge_control_start_threshold /
-# charge_control_end_threshold / charge_behaviour anywhere in sysfs, and its
-# /sys/class/firmware-attributes/ is empty. The ideapad_laptop driver's
-# conservation_mode is therefore the only firmware charge limiter that exists on
-# this machine. It is a fixed EC-controlled cap (~55-60%), not an adjustable
-# percentage -- there is no way to ask for 90%.
+# Both knobs live on the same ideapad_laptop platform device.
+#
+# conservation_mode: this laptop (Yoga Pro 7 14IAH10) exposes NO
+# charge_control_start_threshold / charge_control_end_threshold /
+# charge_behaviour anywhere in sysfs, and /sys/class/firmware-attributes/ is
+# empty. conservation_mode is therefore the only firmware charge limiter that
+# exists here. It is a fixed EC-controlled cap, not an adjustable percentage --
+# there is no way to ask for a specific number like 90%.
+#
+# usb_charging: Lenovo's "always-on USB charging" keeps the USB port rails
+# energised through shutdown, suspend AND hibernate so you can charge a phone
+# from a closed laptop. Measured S4 standby draw on this machine was 2.82 W --
+# roughly 9x a typical 0.1-0.5 W -- so every always-on rail is worth cutting.
+# Turn it back on with `battery-cap usb on` if you ever want to charge from it.
 ConditionPathExists=/sys/bus/platform/devices/VPC2004:00/conservation_mode
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
 ExecStart=/usr/bin/bash -c 'echo 1 > /sys/bus/platform/devices/VPC2004:00/conservation_mode'
+# Not fatal if the firmware does not expose usb_charging: "-" ignores failure.
+ExecStart=-/usr/bin/bash -c 'echo 0 > /sys/bus/platform/devices/VPC2004:00/usb_charging'
 
 [Install]
 WantedBy=multi-user.target

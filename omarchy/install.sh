@@ -39,6 +39,76 @@ else
   echo "already current"
 fi
 
+# Sunshine's web UI rewrites both of these on Save, so they are COPIED rather
+# than symlinked, for the same reason as shell.json above. After changing
+# anything in the UI, copy it back with:
+#   cp ~/.config/sunshine/{sunshine.conf,apps.json} "$HERE/config/sunshine/"
+step "Copying Sunshine config (remote desktop)"
+if [[ -d $HOME/.config/sunshine ]] || command -v sunshine >/dev/null; then
+  mkdir -p "$HOME/.config/sunshine"
+  for f in sunshine.conf apps.json; do
+    if ! cmp -s "$HERE/config/sunshine/$f" "$HOME/.config/sunshine/$f"; then
+      cp -v --backup=numbered "$HERE/config/sunshine/$f" "$HOME/.config/sunshine/$f"
+    else
+      echo "$f already current"
+    fi
+  done
+else
+  echo "sunshine not installed; skipping (see system/sunshine-remote-desktop.sh)"
+fi
+
+# The unit is app-dev.lizardbyte.app.Sunshine.service. It carries
+# `Alias=sunshine.service`, but that alias does not exist until the real unit is
+# enabled once -- so `systemctl --user enable sunshine` fails with "not-found" on
+# a fresh machine. That is the exact line omarchy-install-service-sunshine dies
+# on. Always enable the real name.
+step "Enabling the Sunshine user service"
+SUNSHINE_UNIT=app-dev.lizardbyte.app.Sunshine.service
+if [[ -f /usr/lib/systemd/user/$SUNSHINE_UNIT ]]; then
+  systemctl --user enable --now "$SUNSHINE_UNIT"
+  # Already running from a previous install? Restart so the config copied above
+  # actually takes effect.
+  systemctl --user restart "$SUNSHINE_UNIT"
+  echo "state: $(systemctl --user is-active "$SUNSHINE_UNIT"), $(systemctl --user is-enabled "$SUNSHINE_UNIT")"
+else
+  echo "sunshine not installed; run: sudo bash $HERE/system/sunshine-remote-desktop.sh"
+fi
+
+# ~/.bashrc is seeded from the omarchy-settings package and is NOT a file this
+# repo can symlink -- Omarchy's own bootstrap lines have to stay at the top. So
+# append a source block instead, once, idempotently.
+step "Wiring ~/.dotfiles/bashrc_mac into ~/.bashrc"
+if [[ ! -r $HOME/.dotfiles/bashrc_mac ]]; then
+  echo "~/.dotfiles/bashrc_mac not found; skipping"
+elif grep -q 'dotfiles/bashrc_mac' "$HOME/.bashrc" 2>/dev/null; then
+  echo "already wired"
+else
+  cat >> "$HOME/.bashrc" <<'BASHRC'
+
+# --- personal bash config ---------------------------------------------------
+# Sourced LIVE from the dotfiles repo -- nothing is copied here, so any edit to
+# ~/.dotfiles/bashrc_mac takes effect in the next shell you open.
+if [[ -r "$HOME/.dotfiles/bashrc_mac" ]]; then
+  source "$HOME/.dotfiles/bashrc_mac"
+
+  # Omarchy runs `eval "$(starship init bash)"` from default/bash/init, and
+  # starship_precmd rewrites PS1 via PROMPT_COMMAND before EVERY prompt -- so a
+  # plain PS1= assignment is overwritten before you ever see it.
+  #
+  # Surgically remove ONLY starship's hook. An exact-match test is not enough:
+  # kube-ps1 prepends its own, giving "_kube_ps1_prompt_update;starship_precmd",
+  # and that hook must survive or $(kube_ps1) in your PS1 stops updating.
+  if [[ ${PROMPT_COMMAND:-} == *starship_precmd* ]]; then
+    PROMPT_COMMAND=${PROMPT_COMMAND//starship_precmd/}
+    PROMPT_COMMAND=${PROMPT_COMMAND//;;/;}
+    PROMPT_COMMAND=${PROMPT_COMMAND#;}
+    PROMPT_COMMAND=${PROMPT_COMMAND%;}
+  fi
+fi
+BASHRC
+  echo "appended source block to ~/.bashrc"
+fi
+
 step "Linking helper scripts into ~/.local/bin"
 mkdir -p "$HOME/.local/bin"
 for f in "$HERE"/bin/*; do
